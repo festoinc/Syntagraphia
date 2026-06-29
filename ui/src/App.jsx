@@ -25,6 +25,7 @@ export default function App() {
   const [contentLoading, setContentLoading] = useState(false);
   const [showCreate, setShowCreate] = useState({});
   const [createSlugs, setCreateSlugs] = useState({});
+  const [highlightedIds, setHighlightedIds] = useState(new Set());
   const [error, setError] = useState(null);
 
   // ── Load all ─────────────────────────────────────────────────
@@ -65,14 +66,44 @@ export default function App() {
     return `${typeLabel}: ${name}`;
   }, [relations, documents]);
 
+  // ── Get all related IDs for a document ──────────────────────
+  const getRelatedIds = useCallback((docId) => {
+    const ids = new Set([docId]);
+    const highlightableRels = ['has_task', 'verifies'];
+    // If it's a feature/spec, add its tasks and verifications only
+    relations
+      .filter(r => r.source_id === docId && highlightableRels.includes(r.relation_type))
+      .forEach(r => ids.add(r.target_id));
+    // If it's a task/verification, find its parent(s) and their tasks/verifications
+    relations
+      .filter(r => r.target_id === docId && highlightableRels.includes(r.relation_type))
+      .forEach(r => {
+        ids.add(r.source_id);
+        relations
+          .filter(r2 => r2.source_id === r.source_id && highlightableRels.includes(r2.relation_type))
+          .forEach(r2 => ids.add(r2.target_id));
+      });
+    return ids;
+  }, [relations]);
+
   // ── Toggle expand ────────────────────────────────────────────
   const handleToggle = useCallback(async (id) => {
     if (expandedId === id) {
       setExpandedId(null);
       setExpandedContent('');
+      // Remove this doc's related IDs from highlights
+      const related = getRelatedIds(id);
+      setHighlightedIds(prev => {
+        const next = new Set(prev);
+        related.forEach(rid => next.delete(rid));
+        return next;
+      });
     } else {
       setExpandedId(id);
       setContentLoading(true);
+      // Add this doc's related IDs to highlights (cumulative)
+      const related = getRelatedIds(id);
+      setHighlightedIds(prev => new Set([...prev, ...related]));
       try {
         const doc = await fetchDocument(id);
         setExpandedContent(doc.content || '');
@@ -83,7 +114,7 @@ export default function App() {
         setContentLoading(false);
       }
     }
-  }, [expandedId]);
+  }, [expandedId, getRelatedIds]);
 
   // ── Save content ─────────────────────────────────────────────
   const handleSave = useCallback(async (id, content) => {
@@ -167,16 +198,7 @@ export default function App() {
     return byType[type] || [];
   };
 
-  // ── Highlighted IDs ──────────────────────────────────────────
-  const expandedDoc = documents.find(d => d.id === expandedId);
-  const hlTaskIds = useMemo(() => {
-    if (!expandedDoc || !['feature', 'tech_spec'].includes(expandedDoc.type)) return [];
-    return getChildren(expandedDoc.id, 'has_task').map(t => t.id);
-  }, [expandedDoc, getChildren]);
-  const hlVerifIds = useMemo(() => {
-    if (!expandedDoc || !['feature', 'tech_spec'].includes(expandedDoc.type)) return [];
-    return getChildren(expandedDoc.id, 'verifies').map(v => v.id);
-  }, [expandedDoc, getChildren]);
+
 
   // ── Render ───────────────────────────────────────────────────
   return (
@@ -239,10 +261,7 @@ export default function App() {
                   relatedVerifications={getChildren(doc.id, 'verifies')}
                   onAddTask={handleAddTask}
                   onAddVerification={handleAddVerification}
-                  isHighlighted={
-                    (panel.type === 'task' && hlTaskIds.includes(doc.id)) ||
-                    (panel.type === 'verification' && hlVerifIds.includes(doc.id))
-                  }
+                  isHighlighted={highlightedIds.has(doc.id)}
                   parentLabel={getParentLabel(doc.id)}
                 />
               ))}
