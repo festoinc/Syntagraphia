@@ -11,10 +11,10 @@ import {
 import './App.css';
 
 const PANELS = [
-  { type: 'feature',      title: 'Features',      icon: '📌', color: 'violet',   canAdd: true },
-  { type: 'task',          title: 'Tasks',         icon: '✅', color: 'orange',   canAdd: false },
-  { type: 'tech_spec',     title: 'Specs',         icon: '📐', color: 'blue',     canAdd: true },
-  { type: 'verification',  title: 'Verifications', icon: '🔍', color: 'emerald',  canAdd: false },
+  { type: 'feature',      gridArea: 'features',     title: 'Features',      icon: '📌', color: 'violet',   canAdd: true },
+  { type: 'task',          gridArea: 'tasks',        title: 'Tasks',         icon: '✅', color: 'orange',   canAdd: false },
+  { type: 'tech_spec',     gridArea: 'specs',        title: 'Specs',         icon: '📐', color: 'blue',     canAdd: true },
+  { type: 'verification',  gridArea: 'verifications', title: 'Verifications', icon: '🔍', color: 'emerald',  canAdd: false },
 ];
 
 export default function App() {
@@ -182,7 +182,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>📐 Product Design</h1>
+        <h1>📐 Syntagraphia</h1>
         <button className="btn btn-ghost" onClick={loadData}>🔄 Refresh</button>
       </header>
 
@@ -190,7 +190,7 @@ export default function App() {
 
       <div className="app-grid">
         {PANELS.map(panel => (
-          <div key={panel.type} className={`panel panel-${panel.color}`} style={{ gridArea: panel.type }}>
+          <div key={panel.type} className={`panel panel-${panel.color}`} style={{ gridArea: panel.gridArea }}>
             <div className="panel-header">
               <h2>
                 <span className="panel-icon">{panel.icon}</span>
