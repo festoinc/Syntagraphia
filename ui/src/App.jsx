@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import DocumentCard from './components/DocumentCard';
 import {
+  fetchProjects,
+  createProject,
   fetchDocuments,
   fetchDocument,
   updateContent,
@@ -17,7 +19,11 @@ const PANELS = [
   { type: 'verification',  gridArea: 'verifications', title: 'Verifications', icon: '🔍', color: 'emerald',  canAdd: false },
 ];
 
+const LS_KEY = 'syntagraphia.selectedProjectId';
+
 export default function App() {
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [relations, setRelations] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
@@ -27,19 +33,61 @@ export default function App() {
   const [createSlugs, setCreateSlugs] = useState({});
   const [highlightedIds, setHighlightedIds] = useState(new Set());
   const [error, setError] = useState(null);
+  const [showProjectCreate, setShowProjectCreate] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [creatingProject, setCreatingProject] = useState(false);
 
-  // ── Load all ─────────────────────────────────────────────────
-  const loadData = useCallback(async () => {
+  // ── Load project list ────────────────────────────────────────
+  const loadProjects = useCallback(async () => {
     try {
       setError(null);
-      const data = await fetchDocuments();
+      const rows = await fetchProjects();
+      setProjects(rows);
+      // Pick a selected project: last-used (if still present) → first available.
+      if (rows.length) {
+        const saved = localStorage.getItem(LS_KEY);
+        const savedId = saved != null ? Number(saved) : null;
+        const exists = savedId != null && rows.some((p) => p.id === savedId);
+        if (!exists && !selectedProjectId) setSelectedProjectId(rows[0].id);
+        else if (exists && selectedProjectId == null) setSelectedProjectId(savedId);
+      } else {
+        setSelectedProjectId(null);
+      }
+    } catch (e) {
+      setError('Failed to load projects — is the server running?');
+      console.error(e);
+    }
+  }, [selectedProjectId]);
+
+  useEffect(() => { loadProjects(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist the selected project across reloads.
+  useEffect(() => {
+    if (selectedProjectId != null) localStorage.setItem(LS_KEY, String(selectedProjectId));
+  }, [selectedProjectId]);
+
+  // Reset expansion when switching projects.
+  useEffect(() => {
+    setExpandedId(null);
+    setExpandedContent('');
+    setHighlightedIds(new Set());
+    setShowCreate({});
+    setCreateSlugs({});
+  }, [selectedProjectId]);
+
+  // ── Load documents for the selected project ─────────────────
+  const loadData = useCallback(async () => {
+    if (selectedProjectId == null) return;
+    try {
+      setError(null);
+      const data = await fetchDocuments(selectedProjectId);
       setDocuments(data.documents);
       setRelations(data.relations);
     } catch (e) {
       setError('Failed to load data — is the server running?');
       console.error(e);
     }
-  }, []);
+  }, [selectedProjectId]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -105,7 +153,7 @@ export default function App() {
       const related = getRelatedIds(id);
       setHighlightedIds(prev => new Set([...prev, ...related]));
       try {
-        const doc = await fetchDocument(id);
+        const doc = await fetchDocument(selectedProjectId, id);
         setExpandedContent(doc.content || '');
       } catch (e) {
         console.error(e);
@@ -114,64 +162,83 @@ export default function App() {
         setContentLoading(false);
       }
     }
-  }, [expandedId, getRelatedIds]);
+  }, [expandedId, getRelatedIds, selectedProjectId]);
 
   // ── Save content ─────────────────────────────────────────────
   const handleSave = useCallback(async (id, content) => {
-    await updateContent(id, content);
+    await updateContent(selectedProjectId, id, content);
     setExpandedContent(content);
-  }, []);
+  }, [selectedProjectId]);
 
   // ── Status change ────────────────────────────────────────────
   const handleStatusChange = useCallback(async (id, status) => {
     try {
-      await updateStatus(id, status);
+      await updateStatus(selectedProjectId, id, status);
       setDocuments(prev => prev.map(d => d.id === id ? { ...d, status } : d));
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [selectedProjectId]);
 
   // ── Reload ───────────────────────────────────────────────────
   const reload = useCallback(async () => {
-    const data = await fetchDocuments();
+    const data = await fetchDocuments(selectedProjectId);
     setDocuments(data.documents);
     setRelations(data.relations);
-  }, []);
+  }, [selectedProjectId]);
 
   // ── Create document ──────────────────────────────────────────
   const handleCreate = useCallback(async (type, slug) => {
-    await createDocument({ slug, type });
+    await createDocument(selectedProjectId, { slug, type });
     await reload();
     setShowCreate(prev => ({ ...prev, [type]: false }));
     setCreateSlugs(prev => ({ ...prev, [type]: '' }));
-  }, [reload]);
+  }, [selectedProjectId, reload]);
 
   // ── Add task from expanded view ──────────────────────────────
   const handleAddTask = useCallback(async (parentId, slug, suffix) => {
     try {
-      const newDoc = await createDocument({ slug, type: 'task', suffix });
-      await createRelation({ source_id: parentId, target_id: newDoc.id, relation_type: 'has_task' });
+      const newDoc = await createDocument(selectedProjectId, { slug, type: 'task', suffix });
+      await createRelation(selectedProjectId, { source_id: parentId, target_id: newDoc.id, relation_type: 'has_task' });
       await reload();
     } catch (e) {
       console.error(e);
       throw e;
     }
-  }, [reload]);
+  }, [selectedProjectId, reload]);
 
   // ── Add verification from expanded view ──────────────────────
   const handleAddVerification = useCallback(async (parentId, slug) => {
     const existing = documents.find(d => d.type === 'verification' && d.slug === slug);
     if (existing) {
-      try { await createRelation({ source_id: parentId, target_id: existing.id, relation_type: 'verifies' }); }
+      try { await createRelation(selectedProjectId, { source_id: parentId, target_id: existing.id, relation_type: 'verifies' }); }
       catch { /* duplicate is fine */ }
       await reload();
     } else {
-      const newDoc = await createDocument({ slug, type: 'verification' });
-      await createRelation({ source_id: parentId, target_id: newDoc.id, relation_type: 'verifies' });
+      const newDoc = await createDocument(selectedProjectId, { slug, type: 'verification' });
+      await createRelation(selectedProjectId, { source_id: parentId, target_id: newDoc.id, relation_type: 'verifies' });
       await reload();
     }
-  }, [documents, reload]);
+  }, [documents, selectedProjectId, reload]);
+
+  // ── Create project ───────────────────────────────────────────
+  const handleCreateProject = useCallback(async () => {
+    const name = newProjectName.trim();
+    if (!name) return;
+    setCreatingProject(true);
+    try {
+      const project = await createProject(name);
+      await loadProjects();
+      setSelectedProjectId(project.id);
+      setNewProjectName('');
+      setShowProjectCreate(false);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to create project');
+    } finally {
+      setCreatingProject(false);
+    }
+  }, [newProjectName, loadProjects]);
 
   // ── Grouped documents ────────────────────────────────────────
   const byType = useMemo(() => {
@@ -205,78 +272,123 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>📐 Syntagraphia</h1>
-        <button className="btn btn-ghost" onClick={loadData}>🔄 Refresh</button>
+        <div className="header-controls">
+          <select
+            className="project-select"
+            value={selectedProjectId ?? ''}
+            onChange={(e) => setSelectedProjectId(e.target.value ? Number(e.target.value) : null)}
+            disabled={projects.length === 0}
+          >
+            {projects.length === 0 && <option value="">No projects yet</option>}
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.name} ({p.slug})</option>
+            ))}
+          </select>
+          <button className="btn btn-ghost" onClick={() => setShowProjectCreate(s => !s)}>+ Project</button>
+          <button className="btn btn-ghost" onClick={loadData}>🔄 Refresh</button>
+        </div>
       </header>
+
+      {showProjectCreate && (
+        <div className="project-create-bar">
+          <input
+            type="text"
+            placeholder="Project name (e.g. My App)…"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateProject(); if (e.key === 'Escape') setShowProjectCreate(false); }}
+            autoFocus
+          />
+          <button className="btn btn-primary btn-sm" onClick={handleCreateProject} disabled={creatingProject || !newProjectName.trim()}>
+            {creatingProject ? 'Creating…' : 'Create'}
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowProjectCreate(false)}>✕</button>
+        </div>
+      )}
 
       {error && <div className="error-banner">{error}</div>}
 
-      <div className="app-grid">
-        {PANELS.map(panel => (
-          <div key={panel.type} className={`panel panel-${panel.color}`} style={{ gridArea: panel.gridArea }}>
-            <div className="panel-header">
-              <h2>
-                <span className="panel-icon">{panel.icon}</span>
-                {panel.title}
-                <span className="panel-count">{getItems(panel.type).length}</span>
-              </h2>
-              {panel.canAdd && (
-                <button
-                  className="btn btn-sm btn-add"
-                  onClick={() => setShowCreate(prev => ({ ...prev, [panel.type]: !prev[panel.type] }))}
-                >
-                  + New
-                </button>
-              )}
-            </div>
-
-            <div className="panel-content">
-              {showCreate[panel.type] && (
-                <form
-                  className="create-form"
-                  onSubmit={(e) => { e.preventDefault(); const s = createSlugs[panel.type]?.trim(); if (s) handleCreate(panel.type, s); }}
-                >
-                  <input
-                    type="text"
-                    placeholder="Enter slug (e.g. user-authentication)…"
-                    value={createSlugs[panel.type] || ''}
-                    onChange={(e) => setCreateSlugs(prev => ({ ...prev, [panel.type]: e.target.value }))}
-                    autoFocus
-                  />
-                  <button className="btn btn-primary btn-sm" type="submit" disabled={!createSlugs[panel.type]?.trim()}>Add</button>
-                  <button className="btn btn-ghost btn-sm" type="button" onClick={() => setShowCreate(prev => ({ ...prev, [panel.type]: false }))}>✕</button>
-                </form>
-              )}
-
-              {getItems(panel.type).map(doc => (
-                <DocumentCard
-                  key={doc.id}
-                  doc={doc}
-                  isExpanded={expandedId === doc.id}
-                  content={expandedId === doc.id ? expandedContent : null}
-                  isLoading={expandedId === doc.id && contentLoading}
-                  onToggle={handleToggle}
-                  onContentSave={handleSave}
-                  onStatusChange={handleStatusChange}
-                  relatedTasks={getChildren(doc.id, 'has_task')}
-                  relatedVerifications={getChildren(doc.id, 'verifies')}
-                  onAddTask={handleAddTask}
-                  onAddVerification={handleAddVerification}
-                  isHighlighted={highlightedIds.has(doc.id)}
-                  parentLabel={getParentLabel(doc.id)}
-                />
-              ))}
-
-              {getItems(panel.type).length === 0 && !showCreate[panel.type] && (
-                <div className="panel-empty">
-                  {(panel.type === 'task' || panel.type === 'verification')
-                    ? 'No items yet. Create from a Feature or Spec.'
-                    : 'No items yet. Click + New to add one.'}
-                </div>
-              )}
-            </div>
+      {selectedProjectId == null ? (
+        <div className="empty-state">
+          <div className="empty-state-card">
+            <h2>👋 Welcome to Syntagraphia</h2>
+            <p>{projects.length === 0
+              ? 'No projects yet. Create a project to get started.'
+              : 'Select a project from the dropdown above to view its documents.'}</p>
+            {projects.length === 0 && (
+              <button className="btn btn-primary" onClick={() => setShowProjectCreate(true)}>+ Create a project</button>
+            )}
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="app-grid">
+          {PANELS.map(panel => (
+            <div key={panel.type} className={`panel panel-${panel.color}`} style={{ gridArea: panel.gridArea }}>
+              <div className="panel-header">
+                <h2>
+                  <span className="panel-icon">{panel.icon}</span>
+                  {panel.title}
+                  <span className="panel-count">{getItems(panel.type).length}</span>
+                </h2>
+                {panel.canAdd && (
+                  <button
+                    className="btn btn-sm btn-add"
+                    onClick={() => setShowCreate(prev => ({ ...prev, [panel.type]: !prev[panel.type] }))}
+                  >
+                    + New
+                  </button>
+                )}
+              </div>
+
+              <div className="panel-content">
+                {showCreate[panel.type] && (
+                  <form
+                    className="create-form"
+                    onSubmit={(e) => { e.preventDefault(); const s = createSlugs[panel.type]?.trim(); if (s) handleCreate(panel.type, s); }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Enter slug (e.g. user-authentication)…"
+                      value={createSlugs[panel.type] || ''}
+                      onChange={(e) => setCreateSlugs(prev => ({ ...prev, [panel.type]: e.target.value }))}
+                      autoFocus
+                    />
+                    <button className="btn btn-primary btn-sm" type="submit" disabled={!createSlugs[panel.type]?.trim()}>Add</button>
+                    <button className="btn btn-ghost btn-sm" type="button" onClick={() => setShowCreate(prev => ({ ...prev, [panel.type]: false }))}>✕</button>
+                  </form>
+                )}
+
+                {getItems(panel.type).map(doc => (
+                  <DocumentCard
+                    key={doc.id}
+                    doc={doc}
+                    isExpanded={expandedId === doc.id}
+                    content={expandedId === doc.id ? expandedContent : null}
+                    isLoading={expandedId === doc.id && contentLoading}
+                    onToggle={handleToggle}
+                    onContentSave={handleSave}
+                    onStatusChange={handleStatusChange}
+                    relatedTasks={getChildren(doc.id, 'has_task')}
+                    relatedVerifications={getChildren(doc.id, 'verifies')}
+                    onAddTask={handleAddTask}
+                    onAddVerification={handleAddVerification}
+                    isHighlighted={highlightedIds.has(doc.id)}
+                    parentLabel={getParentLabel(doc.id)}
+                  />
+                ))}
+
+                {getItems(panel.type).length === 0 && !showCreate[panel.type] && (
+                  <div className="panel-empty">
+                    {(panel.type === 'task' || panel.type === 'verification')
+                      ? 'No items yet. Create from a Feature or Spec.'
+                      : 'No items yet. Click + New to add one.'}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
