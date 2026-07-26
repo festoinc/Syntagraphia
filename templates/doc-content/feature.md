@@ -1,4 +1,4 @@
-# Feature — User Authentication
+# Feature — {{slug}}
 
 ## Overview
 <!-- High-level description: what it does, who it's for, user value -->
@@ -8,5 +8,3 @@
 
 ## Out of Scope
 <!-- What is explicitly excluded -->
-
-## Other

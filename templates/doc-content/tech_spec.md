@@ -1,4 +1,4 @@
-# Tech Spec — User Authentication
+# Tech Spec — {{slug}}
 
 ## Architecture
 <!-- System design, data models, API contracts -->

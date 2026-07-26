@@ -1,15 +1,49 @@
 {
-  "name": "product-design",
-  "private": true,
+  "name": "syntagraphia",
+  "version": "0.1.0",
+  "description": "Structured, connected project docs (features, specs, tasks, verifications) in a local SQLite DB — for humans and AI agents.",
+  "license": "MIT",
+  "author": "Festo Inc.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/festoinc/Syntagraphia.git"
+  },
+  "homepage": "https://github.com/festoinc/Syntagraphia#readme",
+  "keywords": [
+    "docs",
+    "documentation",
+    "ai-agent",
+    "agent",
+    "sqlite",
+    "cli",
+    "feature-tracking"
+  ],
+  "bin": {
+    "syntagraphia": "bin/syntagraphia.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "schema.sql",
+    "templates",
+    "ui/dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "server": "node server.js",
+    "server": "node bin/syntagraphia.js ui --no-open",
     "client": "cd ui && npm run dev",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build:ui": "cd ui && npm install && npm run build",
+    "prepack": "npm run build:ui",
+    "prepublishOnly": "npm run build:ui"
   },
   "dependencies": {
-    "better-sqlite3": "^11.7.0",
-    "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
   }
 }
