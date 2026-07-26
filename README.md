@@ -31,34 +31,40 @@ Requires **Node ≥ 22** (uses the built-in `node:sqlite`).
 
 ## Quick start
 
-From your project's root:
+Syntagraphia keeps **every project on your machine** in a single global DB at
+`~/.syntagraphia/project-tracker.db`. Create a project, then scope doc commands to it with
+`--project <id|slug>`:
 
 ```bash
-# 1. Initialize: creates project-tracker.db and captures your constitution
-syntagraphia init
+# 1. Create a project and capture its constitution
+syntagraphia project create "My App"
+#   → prints slug/id, e.g. my-app (id 1)
 
 # 2. Print the agent-facing workflow + command reference
 syntagraphia instructions
 
-# 3. Create connected docs for a feature
-syntagraphia doc create feature user-auth
-syntagraphia doc create tech_spec user-auth
-syntagraphia doc create task user-auth --suffix backend
-syntagraphia doc create verification user-auth
-syntagraphia relate 1 2 has_spec      # feature → spec
-syntagraphia relate 1 3 has_task      # feature → task
-syntagraphia relate 1 4 verifies      # feature → verification
+# 3. Create connected docs for a feature (all --project <slug>)
+syntagraphia doc create feature user-auth --project my-app
+syntagraphia doc create tech_spec user-auth --project my-app
+syntagraphia doc create task user-auth --suffix backend --project my-app
+syntagraphia doc create verification user-auth --project my-app
+syntagraphia relate 1 2 has_spec --project my-app      # feature → spec
+syntagraphia relate 1 3 has_task --project my-app      # feature → task
+syntagraphia relate 1 4 verifies --project my-app      # feature → verification
 
 # 4. View / edit
-syntagraphia doc list
-syntagraphia doc show user-auth
-syntagraphia doc edit 1               # opens $EDITOR
-syntagraphia doc write 1 --file ./notes.md
-syntagraphia status
+syntagraphia doc list --project my-app
+syntagraphia doc show user-auth --project my-app
+syntagraphia doc edit 1 --project my-app               # opens $EDITOR
+syntagraphia doc write 1 --file ./notes.md --project my-app
+syntagraphia status --project my-app
 
-# 5. Web UI (bundled SPA + API, one process/port)
+# 5. Web UI (bundled SPA + API, one process/port — serves ALL projects)
 syntagraphia ui
 ```
+
+Switch repos? Just `project create` another one and pick it from the UI dropdown. The same install
+tracks all of them.
 
 Add one line to your project's `AGENTS.md` / `CLAUDE.md` so agents know the workflow:
 
@@ -66,22 +72,24 @@ Add one line to your project's `AGENTS.md` / `CLAUDE.md` so agents know the work
 
 ## Commands
 
-All one-shot commands support `--json` (machine-readable) and `--dir <path>` (or `SYNTAGRAPHIA_DIR`).
+All one-shot commands support `--json` (machine-readable). Doc-level commands require
+`--project <id|slug>` to scope which project they touch.
 
 | Command | Description |
 |---|---|
-| `init [--constitution-file <path>] [--force]` | Create the DB and capture the constitution |
+| `project create <name> [--constitution-file <path>] [--force]` | Create a project and capture its constitution; `--force` re-captures an existing same-named project's constitution |
+| `project list` | List all projects on this machine |
 | `instructions` / `--instructions` | Print agent-facing instructions |
-| `doc list [--type] [--status]` | List documents |
-| `doc show <id\|slug>` | Show a document (content + relations) |
-| `doc create <type> <slug> [--suffix] [--status]` | Create a document from a template |
-| `doc set-status <id> <STATUS>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
-| `doc write <id> --file <path>\|--stdin` | Overwrite content |
-| `doc edit <id>` | Edit content in `$EDITOR` |
-| `relate <src> <tgt> <type>` | Link documents (`has_spec\|has_task\|verifies\|implements`) |
-| `constitution show` | Show the constitution |
-| `status` | Dashboard summary + orphan check |
-| `ui [--port 3001] [--no-open]` | Start the web UI (long-running) |
+| `doc list --project <p> [--type] [--status]` | List documents in a project |
+| `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
+| `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
+| `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
+| `doc write <id> --project <p> --file <path>\|--stdin` | Overwrite content |
+| `doc edit <id> --project <p>` | Edit content in `$EDITOR` |
+| `relate <src> <tgt> <type> --project <p>` | Link documents (`has_spec\|has_task\|verifies\|implements`); same project only |
+| `constitution show --project <p>` | Show the project's constitution |
+| `status --project <p>` | Dashboard summary + orphan check |
+| `ui [--port 3001] [--no-open]` | Start the web UI (long-running, serves all projects) |
 
 Run `syntagraphia --help` for the full synopsis.
 

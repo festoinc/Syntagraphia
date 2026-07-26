@@ -1,8 +1,12 @@
 # Syntagraphia — Agent Instructions
 
-Syntagraphia keeps a project's docs (features, tech specs, tasks, verifications) structured and
-connected in a single SQLite DB (`project-tracker.db`) at the project root. Every document's
-**content lives in the DB** — there are no `.md` files on disk and no `features/`/`tasks/` directories.
+Syntagraphia keeps a machine's projects (each with features, tech specs, tasks, verifications)
+structured and connected in a **single global SQLite DB** at `~/.syntagraphia/project-tracker.db`.
+One install serves every repo on the PC. Every document's **content lives in the DB** — there are
+no `.md` files on disk and no `features/`/`tasks/` directories.
+
+A **project** is the scoping unit. Doc-level commands take a required `--project <id|slug>` so
+Syntagraphia knows which project you mean. Create projects with `syntagraphia project create <name>`.
 
 Run `npx syntagraphia --instructions` to print this file. Target projects need only one line in
 their own `AGENTS.md`/`CLAUDE.md`:
@@ -14,32 +18,41 @@ their own `AGENTS.md`/`CLAUDE.md`:
 ## Quick reference (all commands one-shot & support `--json`)
 
 ```
-syntagraphia init [--dir <path>] [--force] [--constitution-file <path>]
-    Create project-tracker.db at the target dir and capture the constitution.
-    Interactive in a TTY; use --constitution-file for non-interactive/agent-driven init.
+syntagraphia project create <name> [--constitution-file <path>] [--force]
+    Create a project in the global DB and capture its constitution.
+    Interactive in a TTY; use --constitution-file for non-interactive/agent-driven creation.
+    Prints the new project's slug/id — use it as --project on the commands below.
+    Refuses to duplicate an existing project with the same name; pass --force to re-capture the
+    constitution of that existing project in place instead.
+
+syntagraphia project list [--json]
+    List all projects on this machine (id, slug, name, doc count).
 
 syntagraphia --instructions | instructions
     Print this file.
 
-syntagraphia doc list   [--dir <path>] [--json] [--type <...>] [--status <...>]
-syntagraphia doc show   <id|slug> [--dir <path>] [--json]
-syntagraphia doc create <type> <slug> [--suffix <s>] [--status <STATUS>] [--dir <path>] [--json]
-syntagraphia doc set-status <id> <DRAFT|IN_PROGRESS|REVIEW|DONE> [--dir <path>] [--json]
-syntagraphia doc write  <id> --file <path>|--stdin [--dir <path>] [--json]
-syntagraphia doc edit   <id> [--dir <path>]      # opens $EDITOR, saves back to DB
+syntagraphia doc list   --project <p> [--json] [--type <...>] [--status <...>]
+syntagraphia doc show   <id|slug> --project <p> [--json]
+syntagraphia doc create <type> <slug> --project <p> [--suffix <s>] [--status <STATUS>] [--json]
+syntagraphia doc set-status <id> <DRAFT|IN_PROGRESS|REVIEW|DONE> --project <p> [--json]
+syntagraphia doc write  <id> --project <p> --file <path>|--stdin [--json]
+syntagraphia doc edit   <id> --project <p>      # opens $EDITOR, saves back to DB
 
-syntagraphia relate <source-id> <target-id> <has_spec|has_task|verifies|implements> [--dir <path>] [--json]
+syntagraphia relate <source-id> <target-id> <has_spec|has_task|verifies|implements> --project <p> [--json]
+    Both documents must belong to the same project; cross-project relations are rejected.
 
-syntagraphia constitution show [--dir <path>] [--json]
+syntagraphia constitution show --project <p> [--json]
 
-syntagraphia status [--dir <path>] [--json]
-    Dashboard: counts by type/status + orphan check (Rule 4).
+syntagraphia status --project <p> [--json]
+    Dashboard: counts by type/status + orphan check (Rule 4), scoped to the project.
 
-syntagraphia ui [--dir <path>] [--port 3001] [--no-open]
-    Start the web UI (bundled SPA + API) against the target DB. The only long-running command.
+syntagraphia ui [--port 3001] [--no-open]
+    Start the web UI (bundled SPA + API) against the global DB. Serves ALL projects — pick one
+    from the dropdown in the header. The only long-running command.
 ```
 
-`--dir` resolves the project root (default: cwd). Also honors `SYNTAGRAPHIA_DIR` env var.
+`--project <id|slug>` is **required** on every doc-level command (no default/fallback). Project
+slugs are derived from the name (lowercase, dashes) and de-duplicated on collision.
 Document types: `feature`, `tech_spec`, `task`, `verification` (plus the singleton `constitution`).
 Statuses: `DRAFT` → `IN_PROGRESS` → `REVIEW` → `DONE`.
 
@@ -53,10 +66,10 @@ its spec, its tasks (`-backend`, `-frontend` suffixes), and its verification all
 
 | Type | Purpose | How to create |
 |---|---|---|
-| `feature` | Problem definition, user value, scope | `doc create feature <slug>` |
-| `tech_spec` | Architecture, data models, API contracts, trade-offs | `doc create tech_spec <slug>` |
-| `task` | Actionable work items with acceptance criteria | `doc create task <slug> --suffix backend` |
-| `verification` | Measurable success criteria (feature & spec) | `doc create verification <slug>` |
+| `feature` | Problem definition, user value, scope | `doc create feature <slug> --project <p>` |
+| `tech_spec` | Architecture, data models, API contracts, trade-offs | `doc create tech_spec <slug> --project <p>` |
+| `task` | Actionable work items with acceptance criteria | `doc create task <slug> --suffix backend --project <p>` |
+| `verification` | Measurable success criteria (feature & spec) | `doc create verification <slug> --project <p>` |
 
 ### Relations
 
@@ -67,7 +80,7 @@ its spec, its tasks (`-backend`, `-frontend` suffixes), and its verification all
 | `verifies` | feature → verification | Verification covers this feature |
 | `implements` | task → tech_spec | Task implements a spec (optional) |
 
-Useful: `syntagraphia status` and `syntagraphia doc list`.
+Useful: `syntagraphia status --project <p>` and `syntagraphia doc list --project <p>`.
 
 ---
 
@@ -75,18 +88,19 @@ Useful: `syntagraphia status` and `syntagraphia doc list`.
 
 ### Rule 1: Constitution First
 
-Before creating any feature, ensure `syntagraphia init` has been run and the constitution is
-non-empty. If `syntagraphia constitution show` is empty/missing, stop and ask the user to run
-`syntagraphia init` first.
+Before creating any feature, ensure the project exists and its constitution is non-empty. If
+`syntagraphia constitution show --project <p>` is empty/missing, stop and ask the user to run
+`syntagraphia project create <name>` (re-creating the project, or providing a constitution file)
+first.
 
 ### Rule 2: Features Require Tasks and Verifications
 
 When creating a **feature**, also create:
 
-1. `doc create feature <slug>` — the feature document
-2. At least one `doc create task <slug> --suffix <s>` — concrete work items
-3. `doc create verification <slug>` — measurable success criteria
-4. `relate` the feature → each task (`has_task`) and → the verification (`verifies`).
+1. `doc create feature <slug> --project <p>` — the feature document
+2. At least one `doc create task <slug> --suffix <s> --project <p>` — concrete work items
+3. `doc create verification <slug> --project <p>` — measurable success criteria
+4. `relate` the feature → each task (`has_task`) and → the verification (`verifies`), all `--project <p>`.
 
 Do not proceed with feature work unless tasks and verifications are in place.
 
@@ -94,10 +108,10 @@ Do not proceed with feature work unless tasks and verifications are in place.
 
 When creating a **tech spec**, also create:
 
-1. `doc create tech_spec <slug>` — the specification
-2. At least one `doc create task <slug> --suffix <s>`
-3. `doc create verification <slug>` — append spec criteria if a verification for this slug exists
-4. `relate` spec → task (`implements`), and link the spec to the feature (`has_spec`) if one exists.
+1. `doc create tech_spec <slug> --project <p>` — the specification
+2. At least one `doc create task <slug> --suffix <s> --project <p>`
+3. `doc create verification <slug> --project <p>` — append spec criteria if a verification for this slug exists
+4. `relate` spec → task (`implements`), and link the spec to the feature (`has_spec`) if one exists, all `--project <p>`.
 
 ### Rule 4: No Orphan Tasks or Verifications
 
@@ -108,7 +122,7 @@ discourage it:
 > always be tied to a feature or tech spec so we can trace why we're doing the work. Would you like
 > to create the parent document first?"
 
-`syntagraphia status` reports orphans automatically.
+`syntagraphia status --project <p>` reports orphans automatically.
 
 ---
 
@@ -117,17 +131,19 @@ discourage it:
 ```
 User request
     │
-    ├─ New feature? ─── Constitution exists? ─── No ──▶ Ask user to run `syntagraphia init`
+    ├─ New project? ─── `project create <name>` (capture constitution)
+    │
+    ├─ New feature? ─── Constitution exists? ─── No ──▶ Ask user to run `project create`
     │                                              Yes
-    │                                  create feature + tasks + verification
+    │                                  create feature + tasks + verification (--project <p>)
     │                                  relate them; set statuses as you go
     │
-    ├─ New spec? ──────── create spec + tasks + verification
+    ├─ New spec? ──────── create spec + tasks + verification (--project <p>)
     │                       relate spec → feature (has_spec) if one exists
     │
-    ├─ Work on task? ──── `doc show <id>` → read content → do the work
-    │                       `doc set-status <id> IN_PROGRESS` / `DONE`
-    │                       `doc write <id> --file <notes.md>` to record progress
+    ├─ Work on task? ──── `doc show <id> --project <p>` → read content → do the work
+    │                       `doc set-status <id> IN_PROGRESS --project <p>` / `DONE`
+    │                       `doc write <id> --file <notes.md> --project <p>` to record progress
     │
     └─ Work on verification? ── check parent feature/spec exists (Rule 4)
 ```

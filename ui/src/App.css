@@ -51,6 +51,65 @@ body {
 
 .app-header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-select {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  min-width: 180px;
+}
+.project-select:focus { outline: none; border-color: var(--blue); }
+.project-select:disabled { opacity: .6; cursor: not-allowed; }
+
+.project-create-bar {
+  background: #1e293b;
+  padding: 8px 20px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  border-bottom: 1px solid #0f172a;
+}
+.project-create-bar input {
+  flex: 1;
+  max-width: 320px;
+  padding: 5px 10px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+}
+.project-create-bar input:focus { outline: none; border-color: var(--blue); }
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.empty-state-card {
+  text-align: center;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 40px 48px;
+  box-shadow: var(--shadow);
+  max-width: 420px;
+}
+.empty-state-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+.empty-state-card p { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+
 .app-grid {
   flex: 1;
   display: grid;

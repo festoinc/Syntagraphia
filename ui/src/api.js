@@ -1,19 +1,35 @@
 const BASE = '/api';
 
-export async function fetchDocuments() {
-  const res = await fetch(`${BASE}/documents`);
+export async function fetchProjects() {
+  const res = await fetch(`${BASE}/projects`);
+  if (!res.ok) throw new Error('Failed to fetch projects');
+  return res.json();
+}
+
+export async function createProject(name) {
+  const res = await fetch(`${BASE}/projects`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error('Failed to create project');
+  return res.json();
+}
+
+export async function fetchDocuments(projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents`);
   if (!res.ok) throw new Error('Failed to fetch documents');
   return res.json();
 }
 
-export async function fetchDocument(id) {
-  const res = await fetch(`${BASE}/documents/${id}`);
+export async function fetchDocument(projectId, id) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents/${id}`);
   if (!res.ok) throw new Error('Failed to fetch document');
   return res.json();
 }
 
-export async function updateContent(id, content) {
-  const res = await fetch(`${BASE}/documents/${id}/content`, {
+export async function updateContent(projectId, id, content) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents/${id}/content`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ content }),
@@ -22,8 +38,8 @@ export async function updateContent(id, content) {
   return res.json();
 }
 
-export async function updateStatus(id, status) {
-  const res = await fetch(`${BASE}/documents/${id}/status`, {
+export async function updateStatus(projectId, id, status) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents/${id}/status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status }),
@@ -32,8 +48,8 @@ export async function updateStatus(id, status) {
   return res.json();
 }
 
-export async function createDocument({ slug, type, suffix }) {
-  const res = await fetch(`${BASE}/documents`, {
+export async function createDocument(projectId, { slug, type, suffix }) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ slug, type, suffix }),
@@ -43,8 +59,8 @@ export async function createDocument({ slug, type, suffix }) {
   return res.json();
 }
 
-export async function createRelation({ source_id, target_id, relation_type }) {
-  const res = await fetch(`${BASE}/relations`, {
+export async function createRelation(projectId, { source_id, target_id, relation_type }) {
+  const res = await fetch(`${BASE}/projects/${projectId}/relations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ source_id, target_id, relation_type }),
