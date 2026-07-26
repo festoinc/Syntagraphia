@@ -100,16 +100,6 @@ that work should always trace back to a feature or spec.
   as the API.
 - **Distribution** — npm. `npx syntagraphia` works with zero install step.
 
-## Migrating from the old filesystem layout
-
-If you previously used the filesystem-based version (with `features/`, `tasks/`, etc.), migrate with:
-
-```bash
-node scripts/migrate-legacy.js --dir <path-to-old-project>
-```
-
-It imports existing `.md` files and `PROJECT-CONSTITUTION.md` into the DB and reconstructs relations.
-
 ## Contributing (working on Syntagraphia itself)
 
 ```bash
@@ -124,4 +114,4 @@ with HMR. Build the bundled SPA with `npm run build:ui` (also runs on `prepack`/
 
 ## License
 
-MIT © Festo Inc.
+MIT © Anatolii Fesiuk
