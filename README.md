@@ -77,7 +77,7 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 
 | Command | Description |
 |---|---|
-| `project create <name> [--constitution-file <path>]` | Create a project and capture its constitution |
+| `project create <name> [--constitution-file <path>] [--force]` | Create a project and capture its constitution; `--force` re-captures an existing same-named project's constitution |
 | `project list` | List all projects on this machine |
 | `instructions` / `--instructions` | Print agent-facing instructions |
 | `doc list --project <p> [--type] [--status]` | List documents in a project |

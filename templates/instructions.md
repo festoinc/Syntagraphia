@@ -18,10 +18,12 @@ their own `AGENTS.md`/`CLAUDE.md`:
 ## Quick reference (all commands one-shot & support `--json`)
 
 ```
-syntagraphia project create <name> [--constitution-file <path>]
+syntagraphia project create <name> [--constitution-file <path>] [--force]
     Create a project in the global DB and capture its constitution.
     Interactive in a TTY; use --constitution-file for non-interactive/agent-driven creation.
     Prints the new project's slug/id — use it as --project on the commands below.
+    Refuses to duplicate an existing project with the same name; pass --force to re-capture the
+    constitution of that existing project in place instead.
 
 syntagraphia project list [--json]
     List all projects on this machine (id, slug, name, doc count).
