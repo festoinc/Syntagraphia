@@ -15,7 +15,7 @@ are no `.md` files or `features/`/`tasks/` directories to manage on disk.
 
 ## Demo
 
-[![Syntagraphia: Escaping Vibe Coding Chaos](https://img.youtube.com/vi/oc32Ddz28cE/maxresdefault.jpg)](https://youtu.be/oc32Ddz28cE)
+https://youtu.be/oc32Ddz28cE
 
 ## Install
 
