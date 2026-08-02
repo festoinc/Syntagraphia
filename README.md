@@ -55,8 +55,7 @@ syntagraphia relate 1 4 verifies --project my-app      # feature → verificatio
 # 4. View / edit
 syntagraphia doc list --project my-app
 syntagraphia doc show user-auth --project my-app
-syntagraphia doc edit 1 --project my-app               # opens $EDITOR
-syntagraphia doc write 1 --file ./notes.md --project my-app
+syntagraphia doc update user-auth ./notes.md --project my-app
 syntagraphia status --project my-app
 
 # 5. Web UI (bundled SPA + API, one process/port — serves ALL projects)
@@ -84,8 +83,9 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
 | `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
 | `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
-| `doc write <id> --project <p> --file <path>\|--stdin` | Overwrite content |
-| `doc edit <id> --project <p>` | Edit content in `$EDITOR` |
+| `doc update <id\|slug> <file.md> --project <p>` | Overwrite content from a Markdown file |
+| `doc write <id\|slug> --project <p> --file <path>\|--stdin` | Legacy content overwrite command |
+| `doc edit <id\|slug> --project <p>` | Deprecated; use the UI or `doc update` |
 | `relate <src> <tgt> <type> --project <p>` | Link documents (`has_spec\|has_task\|verifies\|implements`); same project only |
 | `constitution show --project <p>` | Show the project's constitution |
 | `status --project <p>` | Dashboard summary + orphan check |

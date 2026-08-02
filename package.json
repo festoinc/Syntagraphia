@@ -35,6 +35,7 @@
     "server": "node bin/syntagraphia.js ui --no-open",
     "client": "cd ui && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "test": "node --test",
     "build:ui": "cd ui && npm install && npm run build",
     "prepack": "npm run build:ui",
     "prepublishOnly": "npm run build:ui"
