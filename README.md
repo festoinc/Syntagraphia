@@ -55,8 +55,7 @@ syntagraphia relate 1 4 verifies --project my-app      # feature → verificatio
 # 4. View / edit
 syntagraphia doc list --project my-app
 syntagraphia doc show user-auth --project my-app
-syntagraphia doc edit 1 --project my-app               # opens $EDITOR
-syntagraphia doc write 1 --file ./notes.md --project my-app
+syntagraphia doc update user-auth ./notes.md --project my-app
 syntagraphia doc checklist add user-auth "Login flow is documented" --project my-app
 syntagraphia doc checklist update 1 --status DONE --commit https://github.com/org/repo/commit/abc123 --project my-app
 syntagraphia status --project my-app
@@ -90,8 +89,9 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `doc checklist add <id\|slug> <text> --project <p> [--status] [--commit]` | Add a checklist item |
 | `doc checklist update <item-id> --project <p> [--text] [--status] [--commit\|--no-commit]` | Update a checklist item |
 | `doc checklist remove <item-id> --project <p>` | Remove a checklist item |
-| `doc write <id> --project <p> --file <path>\|--stdin` | Overwrite content |
-| `doc edit <id> --project <p>` | Edit content in `$EDITOR` |
+| `doc update <id\|slug> <file.md> --project <p>` | Overwrite content from a Markdown file |
+| `doc write <id\|slug> --project <p> --file <path>\|--stdin` | Legacy content overwrite command |
+| `doc edit <id\|slug> --project <p>` | Deprecated; use the UI or `doc update` |
 | `relate <src> <tgt> <type> --project <p>` | Link documents (`has_spec\|has_task\|verifies\|implements`); same project only |
 | `constitution show --project <p>` | Show the project's constitution |
 | `status --project <p>` | Dashboard summary + orphan check |

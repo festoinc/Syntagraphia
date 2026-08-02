@@ -39,8 +39,13 @@ syntagraphia doc checklist list <id|slug> --project <p> [--json]
 syntagraphia doc checklist add <id|slug> <text> --project <p> [--status <STATUS>] [--commit <url>] [--json]
 syntagraphia doc checklist update <item-id> --project <p> [--text <text>] [--status <STATUS>] [--commit <url>|--no-commit] [--json]
 syntagraphia doc checklist remove <item-id> --project <p> [--json]
-syntagraphia doc write  <id> --project <p> --file <path>|--stdin [--json]
-syntagraphia doc edit   <id> --project <p>      # opens $EDITOR, saves back to DB
+syntagraphia doc update <id|slug> <file.md> --project <p> [--json]
+    Read a Markdown file and overwrite the document content in the DB. The file is only an input;
+    document content remains stored in the DB.
+syntagraphia doc write  <id|slug> --project <p> --file <path>|--stdin [--json]
+    Legacy content overwrite command; use `doc update` for Markdown files.
+syntagraphia doc edit   <id|slug> --project <p>
+    Deprecated. Use `doc update` for CLI/agents or the web UI for human editing.
 
 syntagraphia relate <source-id> <target-id> <has_spec|has_task|verifies|implements> --project <p> [--json]
     Both documents must belong to the same project; cross-project relations are rejected.
@@ -155,6 +160,8 @@ User request
     │                       `doc set-status <id> IN_PROGRESS --project <p>` / `DONE`
     │                       `doc checklist update <item-id> --status DONE --project <p>`
     │                       `doc write <id> --file <notes.md> --project <p>` to record progress
+    │
+    ├─ Update a document? ── prepare a Markdown file → `doc update <id|slug> <file.md> --project <p>`
     │
     └─ Work on verification? ── check parent feature/spec exists (Rule 4)
 ```
