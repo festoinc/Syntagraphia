@@ -69,7 +69,7 @@ export default function ChecklistSection({
   return (
     <div className="checklist-section">
       <div className="related-group-header">
-        <h4>☑️ {label} <span className="checklist-count">{items.filter(item => item.status === 'DONE').length}/{items.length}</span></h4>
+        <h4>{label} <span className="checklist-count">{items.filter(item => item.status === 'DONE').length}/{items.length}</span></h4>
         <button className="btn btn-sm btn-add" onClick={() => setShowForm(!showForm)}>
           + Add Item
         </button>
@@ -119,7 +119,7 @@ export default function ChecklistSection({
               </div>
               <div className="checklist-item-actions">
                 <StatusBadge status={item.status} small onChange={(status) => handleStatusChange(item, status)} />
-                <button className="btn btn-ghost btn-sm" onClick={() => startEdit(item)} aria-label="Edit checklist item">✏️</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => startEdit(item)} aria-label="Edit checklist item">Edit</button>
                 <button className="btn btn-ghost btn-sm checklist-delete" onClick={() => handleDelete(item)} aria-label="Remove checklist item">✕</button>
               </div>
             </>

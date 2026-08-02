@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import DocumentCard from './components/DocumentCard';
+import DocumentModal from './components/DocumentModal';
 import {
   fetchProjects,
   createProject,
@@ -17,11 +18,23 @@ import {
 import './App.css';
 
 const PANELS = [
-  { type: 'feature',      gridArea: 'features',     title: 'Features',      icon: '📌', color: 'violet',   canAdd: true },
-  { type: 'task',          gridArea: 'tasks',        title: 'Tasks',         icon: '✅', color: 'orange',   canAdd: false },
-  { type: 'tech_spec',     gridArea: 'specs',        title: 'Specs',         icon: '📐', color: 'blue',     canAdd: true },
-  { type: 'verification',  gridArea: 'verifications', title: 'Verifications', icon: '🔍', color: 'emerald',  canAdd: false },
+  { type: 'feature',     gridArea: 'features',     title: 'Features',      canAdd: true },
+  { type: 'task',        gridArea: 'tasks',        title: 'Tasks',         canAdd: false },
+  { type: 'tech_spec',   gridArea: 'specs',        title: 'Specs',         canAdd: true },
+  { type: 'verification',gridArea: 'verifications', title: 'Verifications', canAdd: false },
 ];
+
+// Stroke-only line icons — the system's only ornamental mark (cf. Ollama lock/llama).
+const svg = (children) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+);
+const ICONS = {
+  feature:      svg(<><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></>),
+  task:         svg(<><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 4.5-5" /></>),
+  tech_spec:    svg(<><rect x="6" y="4" width="12" height="16" rx="1.5" /><path d="M9 9h6M9 12h6M9 15h4" /></>),
+  verification: svg(<><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></>),
+};
 
 const LS_KEY = 'syntagraphia.selectedProjectId';
 
@@ -47,6 +60,13 @@ export default function App() {
   const [searchStatus, setSearchStatus] = useState('');
   const [searchIds, setSearchIds] = useState(null);
   const [searching, setSearching] = useState(false);
+
+  // ── Full-screen document modal ───────────────────────────────
+  const [modalDocId, setModalDocId] = useState(null);
+  const [modalContent, setModalContent] = useState('');
+  const [modalChecklist, setModalChecklist] = useState([]);
+  const [modalChecklistLabel, setModalChecklistLabel] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // ── Load project list ────────────────────────────────────────
   const loadProjects = useCallback(async () => {
@@ -90,6 +110,10 @@ export default function App() {
     setSearchType('');
     setSearchStatus('');
     setSearchIds(null);
+    setModalDocId(null);
+    setModalContent('');
+    setModalChecklist([]);
+    setModalChecklistLabel(null);
   }, [selectedProjectId]);
 
   // ── Load documents for the selected project ─────────────────
@@ -338,6 +362,77 @@ export default function App() {
     setSearchIds(null);
   }, []);
 
+  // ── Modal open / close ───────────────────────────────────────
+  const openModal = useCallback(async (id) => {
+    setModalDocId(id);
+    setModalLoading(true);
+    setModalContent('');
+    setModalChecklist([]);
+    setModalChecklistLabel(null);
+    try {
+      const doc = await fetchDocument(selectedProjectId, id);
+      setModalContent(doc.content || '');
+      setModalChecklist(doc.checklist || []);
+      setModalChecklistLabel(doc.checklist_label || null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setModalLoading(false);
+    }
+  }, [selectedProjectId]);
+
+  const closeModal = useCallback(() => {
+    setModalDocId(null);
+    setModalContent('');
+    setModalChecklist([]);
+    setModalChecklistLabel(null);
+  }, []);
+
+  // Modal-scoped content save (keeps modal buffer in sync).
+  const handleModalSave = useCallback(async (id, content) => {
+    await updateContent(selectedProjectId, id, content);
+    setModalContent(content);
+  }, [selectedProjectId]);
+
+  const handleModalChecklistAdd = useCallback(async (documentId, item) => {
+    const created = await createChecklistItem(selectedProjectId, documentId, item);
+    setModalChecklist(prev => [...prev, created]);
+    setDocuments(prev => prev.map(d => d.id === documentId
+      ? { ...d, checklist_total: Number(d.checklist_total || 0) + 1 }
+      : d));
+    return created;
+  }, [selectedProjectId]);
+
+  const handleModalChecklistUpdate = useCallback(async (documentId, itemId, changes) => {
+    const existing = modalChecklist.find(item => item.id === itemId);
+    const updated = await updateChecklistItem(selectedProjectId, documentId, itemId, changes);
+    setModalChecklist(prev => prev.map(item => item.id === itemId ? updated : item));
+    if (existing && existing.status !== updated.status) {
+      setDocuments(prev => prev.map(d => d.id === documentId
+        ? {
+            ...d,
+            checklist_done: Number(d.checklist_done || 0)
+              + (updated.status === 'DONE' ? 1 : 0)
+              - (existing.status === 'DONE' ? 1 : 0),
+          }
+        : d));
+    }
+    return updated;
+  }, [modalChecklist, selectedProjectId]);
+
+  const handleModalChecklistDelete = useCallback(async (documentId, itemId) => {
+    const existing = modalChecklist.find(item => item.id === itemId);
+    await deleteChecklistItem(selectedProjectId, documentId, itemId);
+    setModalChecklist(prev => prev.filter(item => item.id !== itemId));
+    setDocuments(prev => prev.map(d => d.id === documentId
+      ? {
+          ...d,
+          checklist_total: Math.max(0, Number(d.checklist_total || 0) - 1),
+          checklist_done: Math.max(0, Number(d.checklist_done || 0) - (existing?.status === 'DONE' ? 1 : 0)),
+        }
+      : d));
+  }, [modalChecklist, selectedProjectId]);
+
   // ── Grouped documents ────────────────────────────────────────
   const visibleDocuments = useMemo(
     () => searchIds == null ? documents : documents.filter(d => searchIds.has(d.id)),
@@ -367,6 +462,11 @@ export default function App() {
     if (type === 'verification') return verifsWithParent;
     return byType[type] || [];
   };
+
+  const modalDoc = useMemo(
+    () => documents.find(d => d.id === modalDocId) || null,
+    [documents, modalDocId]
+  );
 
 
 
@@ -415,13 +515,13 @@ export default function App() {
               <option value="REVIEW">Review</option>
               <option value="DONE">Done</option>
             </select>
-            <button className="btn btn-primary btn-sm" type="submit" disabled={searching}>
+            <button className="btn btn-secondary btn-sm" type="submit" disabled={searching}>
               {searching ? 'Searching…' : 'Search'}
             </button>
             {searchIds != null && <button className="btn btn-ghost btn-sm" type="button" onClick={clearSearch}>Clear</button>}
           </form>
-          <button className="btn btn-ghost" onClick={() => setShowProjectCreate(s => !s)}>+ Project</button>
-          <button className="btn btn-ghost" onClick={loadData}>🔄 Refresh</button>
+          <button className="btn btn-ghost" onClick={loadData}>Refresh</button>
+          <button className="btn btn-primary" onClick={() => setShowProjectCreate(s => !s)}>+ Project</button>
         </div>
       </header>
 
@@ -447,7 +547,7 @@ export default function App() {
       {selectedProjectId == null ? (
         <div className="empty-state">
           <div className="empty-state-card">
-            <h2>👋 Welcome to Syntagraphia</h2>
+            <h2>Welcome to Syntagraphia</h2>
             <p>{projects.length === 0
               ? 'No projects yet. Create a project to get started.'
               : 'Select a project from the dropdown above to view its documents.'}</p>
@@ -465,10 +565,10 @@ export default function App() {
           )}
           <div className="app-grid">
             {PANELS.map(panel => (
-            <div key={panel.type} className={`panel panel-${panel.color}`} style={{ gridArea: panel.gridArea }}>
+            <div key={panel.type} className="panel" style={{ gridArea: panel.gridArea }}>
               <div className="panel-header">
                 <h2>
-                  <span className="panel-icon">{panel.icon}</span>
+                  <span className="panel-icon">{ICONS[panel.type]}</span>
                   {panel.title}
                   <span className="panel-count">{getItems(panel.type).length}</span>
                 </h2>
@@ -521,6 +621,7 @@ export default function App() {
                     onAddVerification={handleAddVerification}
                     isHighlighted={highlightedIds.has(doc.id)}
                     parentLabel={getParentLabel(doc.id)}
+                    onOpenModal={openModal}
                   />
                 ))}
 
@@ -536,6 +637,27 @@ export default function App() {
             ))}
           </div>
         </>
+      )}
+
+      {modalDocId != null && modalDoc && (
+        <DocumentModal
+          doc={modalDoc}
+          parentLabel={getParentLabel(modalDoc.id)}
+          content={modalContent}
+          isLoading={modalLoading}
+          onContentSave={handleModalSave}
+          checklist={modalChecklist}
+          checklistLabel={modalChecklistLabel}
+          onChecklistAdd={handleModalChecklistAdd}
+          onChecklistUpdate={handleModalChecklistUpdate}
+          onChecklistDelete={handleModalChecklistDelete}
+          relatedTasks={getChildren(modalDoc.id, 'has_task')}
+          relatedVerifications={getChildren(modalDoc.id, 'verifies')}
+          onAddTask={handleAddTask}
+          onAddVerification={handleAddVerification}
+          onStatusChange={handleStatusChange}
+          onClose={closeModal}
+        />
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 {
   "name": "syntagraphia",
-  "version": "2026.8.2-2",
+  "version": "2026.8.2-3",
   "description": "Structured, connected project docs (features, specs, tasks, verifications) in a local SQLite DB — for humans and AI agents.",
   "license": "MIT",
   "author": "Festo Inc.",
