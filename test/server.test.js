@@ -81,3 +81,41 @@ test('checklist API supports CRUD and independent item status', async () => {
   assert.equal(deleteResponse.status, 200);
   assert.deepEqual(await deleteResponse.json(), { success: true });
 });
+
+test('search API matches content and applies type/status filters', async () => {
+  const projectResponse = await request('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify({ name: 'API Search Project', constitution: '# Constitution\n' }),
+  });
+  assert.equal(projectResponse.status, 200);
+  const project = await projectResponse.json();
+
+  const featureResponse = await request(`/api/projects/${project.id}/documents`, {
+    method: 'POST',
+    body: JSON.stringify({ slug: 'search-feature', type: 'feature' }),
+  });
+  const feature = await featureResponse.json();
+  const contentResponse = await request(`/api/projects/${project.id}/documents/${feature.id}/content`, {
+    method: 'PUT',
+    body: JSON.stringify({ content: '# Searchable\nThis covers session authentication.' }),
+  });
+  assert.equal(contentResponse.status, 200);
+
+  const taskResponse = await request(`/api/projects/${project.id}/documents`, {
+    method: 'POST',
+    body: JSON.stringify({ slug: 'search-task', type: 'task', suffix: 'backend', status: 'DONE' }),
+  });
+  const task = await taskResponse.json();
+
+  const contentSearch = await request(`/api/projects/${project.id}/documents/search?q=AUTHENTICATION`);
+  assert.equal(contentSearch.status, 200);
+  assert.deepEqual((await contentSearch.json()).documents.map(doc => doc.id), [feature.id]);
+
+  const filteredSearch = await request(`/api/projects/${project.id}/documents/search?type=task&status=DONE`);
+  assert.equal(filteredSearch.status, 200);
+  assert.deepEqual((await filteredSearch.json()).documents.map(doc => doc.id), [task.id]);
+
+  const invalidSearch = await request(`/api/projects/${project.id}/documents/search?status=INVALID`);
+  assert.equal(invalidSearch.status, 400);
+  assert.match((await invalidSearch.json()).error, /Invalid status/);
+});

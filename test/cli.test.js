@@ -204,3 +204,38 @@ test('database backend status and sqlite selection are persisted safely', () => 
   assert.equal(fs.statSync(configPath).mode & 0o777, 0o600);
   assert.deepEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')), { db: { kind: 'sqlite' } });
 });
+
+test('search finds document content and supports type, status, and project filters', () => {
+  const sandbox = createSandbox();
+  const project = createProject(sandbox, 'Search Project');
+  const otherProject = createProject(sandbox, 'Other Search Project');
+  const feature = createDocument(sandbox, project, 'feature', 'user-auth');
+  const task = run(sandbox.home, 'doc', 'create', 'task', 'deployment', '--suffix', 'backend', '--project', project.slug, '--status', 'DONE', '--json');
+  assert.equal(task.status, 0, task.stderr);
+  const taskDoc = JSON.parse(task.stdout);
+  const notes = sandbox.write('search-notes.md', 'Authentication uses a secure session cookie.');
+  const write = run(sandbox.home, 'doc', 'write', String(feature.id), '--project', project.slug, '--file', notes);
+  assert.equal(write.status, 0, write.stderr);
+
+  const contentMatches = run(sandbox.home, 'search', 'SESSION', '--project', project.slug, '--json');
+  assert.equal(contentMatches.status, 0, contentMatches.stderr);
+  assert.deepEqual(JSON.parse(contentMatches.stdout).map(doc => doc.id), [feature.id]);
+
+  const suffixMatches = run(sandbox.home, 'search', 'backend', '--project', project.slug, '--json');
+  assert.equal(suffixMatches.status, 0, suffixMatches.stderr);
+  assert.deepEqual(JSON.parse(suffixMatches.stdout).map(doc => doc.id), [taskDoc.id]);
+
+  const filtered = run(sandbox.home, 'search', '--project', project.slug, '--type', 'task', '--status', 'DONE', '--json');
+  assert.equal(filtered.status, 0, filtered.stderr);
+  assert.deepEqual(JSON.parse(filtered.stdout).map(doc => doc.id), [taskDoc.id]);
+
+  const invalid = run(sandbox.home, 'search', 'anything', '--project', project.slug, '--type', 'unknown');
+  assert.equal(invalid.status, 1);
+  assert.match(invalid.stderr, /Invalid type/);
+
+  const otherFeature = createDocument(sandbox, otherProject, 'feature', 'user-auth');
+  const isolated = run(sandbox.home, 'search', 'user-auth', '--project', project.slug, '--json');
+  assert.equal(isolated.status, 0, isolated.stderr);
+  assert.deepEqual(JSON.parse(isolated.stdout).map(doc => doc.id), [feature.id]);
+  assert.notEqual(otherFeature.id, feature.id);
+});
