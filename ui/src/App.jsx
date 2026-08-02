@@ -374,7 +374,13 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>📐 Syntagraphia</h1>
+        <div className="brand-lockup">
+          <span className="brand-mark" aria-hidden="true">S</span>
+          <div>
+            <p className="brand-kicker">Project intelligence</p>
+            <h1>Syntagraphia</h1>
+          </div>
+        </div>
         <div className="header-controls">
           <select
             className="project-select"
@@ -436,7 +442,7 @@ export default function App() {
         </div>
       )}
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && <div className="error-banner" role="alert">{error}</div>}
 
       {selectedProjectId == null ? (
         <div className="empty-state">
@@ -453,7 +459,7 @@ export default function App() {
       ) : (
         <>
           {searchIds != null && (
-            <div className="search-summary">
+            <div className="search-summary" role="status">
               Showing {visibleDocuments.length} matching document{visibleDocuments.length === 1 ? '' : 's'}.
             </div>
           )}

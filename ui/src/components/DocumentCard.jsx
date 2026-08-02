@@ -76,18 +76,26 @@ export default function DocumentCard({
   };
 
   return (
-    <div className={`doc-card${isExpanded ? ' expanded' : ''}${isHighlighted ? ' highlighted' : ''}`}>
-      <div className="doc-card-header" onClick={() => onToggle(doc.id)}>
-        <span className="doc-card-arrow">{isExpanded ? '▾' : '▸'}</span>
-        <div className="doc-card-info">
-          <span className="doc-card-title">{label}</span>
-          {parentLabel && <span className="doc-card-parent">{parentLabel}</span>}
-        </div>
+    <article className={`doc-card${isExpanded ? ' expanded' : ''}${isHighlighted ? ' highlighted' : ''}`}>
+      <div className="doc-card-header">
+        <button
+          type="button"
+          className="doc-card-toggle"
+          onClick={() => onToggle(doc.id)}
+          aria-expanded={isExpanded}
+          aria-controls={`document-body-${doc.id}`}
+        >
+          <span className="doc-card-arrow" aria-hidden="true">{isExpanded ? '▾' : '▸'}</span>
+          <span className="doc-card-info">
+            <span className="doc-card-title">{label}</span>
+            {parentLabel && <span className="doc-card-parent">{parentLabel}</span>}
+          </span>
+        </button>
         <StatusBadge status={doc.status} onChange={(s) => onStatusChange(doc.id, s)} />
       </div>
 
       {isExpanded && (
-        <div className="doc-card-body">
+        <div className="doc-card-body" id={`document-body-${doc.id}`}>
           {isLoading ? (
             <div className="loading">Loading...</div>
           ) : editing ? (
@@ -188,6 +196,6 @@ export default function DocumentCard({
           )}
         </div>
       )}
-    </div>
+    </article>
   );
 }

@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 
 const STATUS = {
-  DRAFT:        { label: 'Draft',       color: '#94a3b8' },
-  IN_PROGRESS:  { label: 'In Progress', color: '#3b82f6' },
-  REVIEW:       { label: 'Review',      color: '#f59e0b' },
-  DONE:         { label: 'Done',        color: '#22c55e' },
+  DRAFT:        { label: 'Draft',       color: 'var(--status-draft)' },
+  IN_PROGRESS:  { label: 'In Progress', color: 'var(--status-progress)' },
+  REVIEW:       { label: 'Review',      color: 'var(--status-review)' },
+  DONE:         { label: 'Done',        color: 'var(--status-done)' },
 };
 
 export default function StatusBadge({ status, onChange, small }) {
@@ -24,7 +24,14 @@ export default function StatusBadge({ status, onChange, small }) {
   return (
     <div ref={ref} className={`status-badge${small ? ' small' : ''}`} style={{ '--color': cfg.color }}>
       {onChange ? (
-        <button className="status-badge-btn" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
+        <button
+          type="button"
+          className="status-badge-btn"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-label={`Change status, currently ${cfg.label}`}
+          onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        >
           <span className="status-dot" />
           <span>{cfg.label}</span>
         </button>
@@ -35,10 +42,13 @@ export default function StatusBadge({ status, onChange, small }) {
         </span>
       )}
       {open && onChange && (
-        <div className="status-dropdown">
+        <div className="status-dropdown" role="listbox" aria-label="Document status">
           {Object.entries(STATUS).map(([key, val]) => (
             <button
               key={key}
+              type="button"
+              role="option"
+              aria-selected={key === status}
               className={`status-option${key === status ? ' active' : ''}`}
               style={{ '--opt-color': val.color }}
               onClick={(e) => { e.stopPropagation(); onChange(key); setOpen(false); }}
