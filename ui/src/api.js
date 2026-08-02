@@ -48,6 +48,34 @@ export async function updateStatus(projectId, id, status) {
   return res.json();
 }
 
+export async function createChecklistItem(projectId, documentId, { text, status, commit_url }) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents/${documentId}/checklist`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, status, commit_url }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to add checklist item');
+  return res.json();
+}
+
+export async function updateChecklistItem(projectId, documentId, itemId, changes) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents/${documentId}/checklist/${itemId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(changes),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to update checklist item');
+  return res.json();
+}
+
+export async function deleteChecklistItem(projectId, documentId, itemId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/documents/${documentId}/checklist/${itemId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to remove checklist item');
+  return res.json();
+}
+
 export async function createDocument(projectId, { slug, type, suffix }) {
   const res = await fetch(`${BASE}/projects/${projectId}/documents`, {
     method: 'POST',

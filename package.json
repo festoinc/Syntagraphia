@@ -32,6 +32,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "test": "node --test",
     "server": "node bin/syntagraphia.js ui --no-open",
     "client": "cd ui && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",

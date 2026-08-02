@@ -35,6 +35,10 @@ syntagraphia doc list   --project <p> [--json] [--type <...>] [--status <...>]
 syntagraphia doc show   <id|slug> --project <p> [--json]
 syntagraphia doc create <type> <slug> --project <p> [--suffix <s>] [--status <STATUS>] [--json]
 syntagraphia doc set-status <id> <DRAFT|IN_PROGRESS|REVIEW|DONE> --project <p> [--json]
+syntagraphia doc checklist list <id|slug> --project <p> [--json]
+syntagraphia doc checklist add <id|slug> <text> --project <p> [--status <STATUS>] [--commit <url>] [--json]
+syntagraphia doc checklist update <item-id> --project <p> [--text <text>] [--status <STATUS>] [--commit <url>|--no-commit] [--json]
+syntagraphia doc checklist remove <item-id> --project <p> [--json]
 syntagraphia doc write  <id> --project <p> --file <path>|--stdin [--json]
 syntagraphia doc edit   <id> --project <p>      # opens $EDITOR, saves back to DB
 
@@ -56,6 +60,12 @@ slugs are derived from the name (lowercase, dashes) and de-duplicated on collisi
 Document types: `feature`, `tech_spec`, `task`, `verification` (plus the singleton `constitution`).
 Statuses: `DRAFT` → `IN_PROGRESS` → `REVIEW` → `DONE`.
 
+Structured checklist labels: feature → `Acceptance Criteria`, task → `Subtasks`, tech_spec →
+`Technical Checklist`, verification → `Validation Checklist`. Checklist item statuses are
+independent from document statuses. Each item may include an optional HTTP(S) Git commit URL.
+Checklist items are stored separately from Markdown content; existing Markdown checkbox lists are
+not imported automatically.
+
 ---
 
 ## What goes where
@@ -68,7 +78,7 @@ its spec, its tasks (`-backend`, `-frontend` suffixes), and its verification all
 |---|---|---|
 | `feature` | Problem definition, user value, scope | `doc create feature <slug> --project <p>` |
 | `tech_spec` | Architecture, data models, API contracts, trade-offs | `doc create tech_spec <slug> --project <p>` |
-| `task` | Actionable work items with acceptance criteria | `doc create task <slug> --suffix backend --project <p>` |
+| `task` | Actionable work items with structured subtasks | `doc create task <slug> --suffix backend --project <p>` |
 | `verification` | Measurable success criteria (feature & spec) | `doc create verification <slug> --project <p>` |
 
 ### Relations
@@ -143,6 +153,7 @@ User request
     │
     ├─ Work on task? ──── `doc show <id> --project <p>` → read content → do the work
     │                       `doc set-status <id> IN_PROGRESS --project <p>` / `DONE`
+    │                       `doc checklist update <item-id> --status DONE --project <p>`
     │                       `doc write <id> --file <notes.md> --project <p>` to record progress
     │
     └─ Work on verification? ── check parent feature/spec exists (Rule 4)
@@ -157,6 +168,7 @@ User request
 # Feature — <slug>
 ## Overview
 ## User Stories
+## Acceptance Criteria
 ## Out of Scope
 ```
 
@@ -167,23 +179,21 @@ User request
 ## Decisions
 ## Dependencies
 ## Risks
+## Technical Checklist
 ```
 
 ### Task
 ```markdown
 # Task — <slug> (<suffix>)
 ## Summary
-## Acceptance Criteria
-- [ ]
+## Subtasks
 ## References
 ```
 
 ### Verification
 ```markdown
 # Verification — <slug>
-## Feature Success Criteria
-- [ ]
-## Spec Success Criteria
-- [ ]
+## Validation Notes
+## Success Criteria
 ## Related
 ```

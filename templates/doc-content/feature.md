@@ -6,5 +6,8 @@
 ## User Stories
 <!-- List key user stories -->
 
+## Acceptance Criteria
+<!-- Manage structured criteria in Syntagraphia's checklist panel. -->
+
 ## Out of Scope
 <!-- What is explicitly excluded -->

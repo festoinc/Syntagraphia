@@ -7,6 +7,9 @@ import {
   fetchDocument,
   updateContent,
   updateStatus,
+  createChecklistItem,
+  updateChecklistItem,
+  deleteChecklistItem,
   createDocument,
   createRelation,
 } from './api';
@@ -28,6 +31,8 @@ export default function App() {
   const [relations, setRelations] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [expandedContent, setExpandedContent] = useState('');
+  const [expandedChecklist, setExpandedChecklist] = useState([]);
+  const [expandedChecklistLabel, setExpandedChecklistLabel] = useState(null);
   const [contentLoading, setContentLoading] = useState(false);
   const [showCreate, setShowCreate] = useState({});
   const [createSlugs, setCreateSlugs] = useState({});
@@ -70,6 +75,8 @@ export default function App() {
   useEffect(() => {
     setExpandedId(null);
     setExpandedContent('');
+    setExpandedChecklist([]);
+    setExpandedChecklistLabel(null);
     setHighlightedIds(new Set());
     setShowCreate({});
     setCreateSlugs({});
@@ -139,6 +146,8 @@ export default function App() {
     if (expandedId === id) {
       setExpandedId(null);
       setExpandedContent('');
+      setExpandedChecklist([]);
+      setExpandedChecklistLabel(null);
       // Remove this doc's related IDs from highlights
       const related = getRelatedIds(id);
       setHighlightedIds(prev => {
@@ -155,6 +164,8 @@ export default function App() {
       try {
         const doc = await fetchDocument(selectedProjectId, id);
         setExpandedContent(doc.content || '');
+        setExpandedChecklist(doc.checklist || []);
+        setExpandedChecklistLabel(doc.checklist_label || null);
       } catch (e) {
         console.error(e);
         setExpandedContent('');
@@ -179,6 +190,46 @@ export default function App() {
       console.error(e);
     }
   }, [selectedProjectId]);
+
+  // ── Checklist changes ──────────────────────────────────────
+  const handleChecklistAdd = useCallback(async (documentId, item) => {
+    const created = await createChecklistItem(selectedProjectId, documentId, item);
+    setExpandedChecklist(prev => [...prev, created]);
+    setDocuments(prev => prev.map(d => d.id === documentId
+      ? { ...d, checklist_total: Number(d.checklist_total || 0) + 1 }
+      : d));
+    return created;
+  }, [selectedProjectId]);
+
+  const handleChecklistUpdate = useCallback(async (documentId, itemId, changes) => {
+    const existing = expandedChecklist.find(item => item.id === itemId);
+    const updated = await updateChecklistItem(selectedProjectId, documentId, itemId, changes);
+    setExpandedChecklist(prev => prev.map(item => item.id === itemId ? updated : item));
+    if (existing && existing.status !== updated.status) {
+      setDocuments(prev => prev.map(d => d.id === documentId
+        ? {
+            ...d,
+            checklist_done: Number(d.checklist_done || 0)
+              + (updated.status === 'DONE' ? 1 : 0)
+              - (existing.status === 'DONE' ? 1 : 0),
+          }
+        : d));
+    }
+    return updated;
+  }, [expandedChecklist, selectedProjectId]);
+
+  const handleChecklistDelete = useCallback(async (documentId, itemId) => {
+    const existing = expandedChecklist.find(item => item.id === itemId);
+    await deleteChecklistItem(selectedProjectId, documentId, itemId);
+    setExpandedChecklist(prev => prev.filter(item => item.id !== itemId));
+    setDocuments(prev => prev.map(d => d.id === documentId
+      ? {
+          ...d,
+          checklist_total: Math.max(0, Number(d.checklist_total || 0) - 1),
+          checklist_done: Math.max(0, Number(d.checklist_done || 0) - (existing?.status === 'DONE' ? 1 : 0)),
+        }
+      : d));
+  }, [expandedChecklist, selectedProjectId]);
 
   // ── Reload ───────────────────────────────────────────────────
   const reload = useCallback(async () => {
@@ -368,6 +419,11 @@ export default function App() {
                     onToggle={handleToggle}
                     onContentSave={handleSave}
                     onStatusChange={handleStatusChange}
+                    checklist={expandedId === doc.id ? expandedChecklist : []}
+                    checklistLabel={expandedId === doc.id ? expandedChecklistLabel : null}
+                    onChecklistAdd={handleChecklistAdd}
+                    onChecklistUpdate={handleChecklistUpdate}
+                    onChecklistDelete={handleChecklistDelete}
                     relatedTasks={getChildren(doc.id, 'has_task')}
                     relatedVerifications={getChildren(doc.id, 'verifies')}
                     onAddTask={handleAddTask}

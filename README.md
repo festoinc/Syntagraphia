@@ -57,6 +57,8 @@ syntagraphia doc list --project my-app
 syntagraphia doc show user-auth --project my-app
 syntagraphia doc edit 1 --project my-app               # opens $EDITOR
 syntagraphia doc write 1 --file ./notes.md --project my-app
+syntagraphia doc checklist add user-auth "Login flow is documented" --project my-app
+syntagraphia doc checklist update 1 --status DONE --commit https://github.com/org/repo/commit/abc123 --project my-app
 syntagraphia status --project my-app
 
 # 5. Web UI (bundled SPA + API, one process/port — serves ALL projects)
@@ -84,6 +86,10 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
 | `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
 | `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
+| `doc checklist list <id\|slug> --project <p>` | List a document's structured checklist |
+| `doc checklist add <id\|slug> <text> --project <p> [--status] [--commit]` | Add a checklist item |
+| `doc checklist update <item-id> --project <p> [--text] [--status] [--commit\|--no-commit]` | Update a checklist item |
+| `doc checklist remove <item-id> --project <p>` | Remove a checklist item |
 | `doc write <id> --project <p> --file <path>\|--stdin` | Overwrite content |
 | `doc edit <id> --project <p>` | Edit content in `$EDITOR` |
 | `relate <src> <tgt> <type> --project <p>` | Link documents (`has_spec\|has_task\|verifies\|implements`); same project only |
@@ -101,6 +107,20 @@ All documents for a topic share a **slug** (e.g. `user-auth`). Relations tie the
 - `has_task` — feature → task
 - `verifies` — feature → verification
 - `implements` — task → tech_spec (optional)
+
+## Structured checklists
+
+Features, tasks, tech specs, and verifications have a structured checklist separate from their
+Markdown content:
+
+- features use **Acceptance Criteria**;
+- tasks use **Subtasks**;
+- tech specs use **Technical Checklist**;
+- verifications use **Validation Checklist**.
+
+Every item has its own status (`DRAFT`, `IN_PROGRESS`, `REVIEW`, or `DONE`) and may include an
+optional HTTP(S) link to the Git commit that completed it. Checklist items are project-scoped and
+keep their own order. Existing Markdown checkbox lists are not imported automatically.
 
 `syntagraphia status` reports orphan tasks/verifications (those with no parent), enforcing the rule
 that work should always trace back to a feature or spec.
