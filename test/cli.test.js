@@ -298,3 +298,18 @@ test('doc write remains available and doc edit is deprecated', () => {
   assert.match(edit.stderr, /deprecated/);
   assert.match(edit.stderr, /syntagraphia ui/);
 });
+
+test('database backend status and sqlite selection are persisted safely', () => {
+  const sandbox = createSandbox();
+  const initial = run(sandbox.home, 'db', 'status', '--json');
+  assert.equal(initial.status, 0, initial.stderr);
+  assert.equal(JSON.parse(initial.stdout).kind, 'sqlite');
+
+  const switched = run(sandbox.home, 'db', 'use', 'sqlite', '--json');
+  assert.equal(switched.status, 0, switched.stderr);
+  assert.deepEqual(JSON.parse(switched.stdout), { kind: 'sqlite', switched: true });
+
+  const configPath = path.join(sandbox.home, '.syntagraphia', 'config.json');
+  assert.equal(fs.statSync(configPath).mode & 0o777, 0o600);
+  assert.deepEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')), { db: { kind: 'sqlite' } });
+});

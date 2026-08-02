@@ -25,6 +25,7 @@
     "bin",
     "lib",
     "schema.sql",
+    "schema.postgres.sql",
     "templates",
     "ui/dist"
   ],
@@ -43,7 +44,8 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.21.0"
+    "express": "^4.21.0",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

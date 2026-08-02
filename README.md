@@ -5,7 +5,7 @@ Open-source tool that helps you write better docs with AI — and keep them stru
 Syntagraphia combines the Greek words σύνταξη (syntax, structure, arrangement) and γραφή (writing, description, representation), reflecting the project’s goal of turning information into a well-structured knowledge graph.
 
 As vibe-coded projects grow, it's easy to lose context of what was built and why. Syntagraphia keeps
-your **features, tech specs, tasks, and verifications** in a single local SQLite database, linked by
+your **features, tech specs, tasks, and verifications** in a single local SQLite database by default, or a provisioned PostgreSQL database, linked by
 explicit relations — so you (and your AI agents) always stay on the same page.
 
 Syntagraphia is a **CLI** (with an optional web UI). Document content lives entirely in the DB; there
@@ -27,7 +27,7 @@ npx syntagraphia <command>
 npm install -g syntagraphia
 ```
 
-Requires **Node ≥ 22** (uses the built-in `node:sqlite`).
+Requires **Node ≥ 22** (uses the built-in `node:sqlite`; PostgreSQL uses the pure-JavaScript `pg` client).
 
 ## Quick start
 
@@ -62,6 +62,11 @@ syntagraphia status --project my-app
 
 # 5. Web UI (bundled SPA + API, one process/port — serves ALL projects)
 syntagraphia ui
+
+# Optional: switch the machine-wide backend (no data migration)
+syntagraphia db status
+syntagraphia db use postgres --url postgres://user:password@host:5432/syntagraphia
+syntagraphia db use sqlite
 ```
 
 Switch repos? Just `project create` another one and pick it from the UI dropdown. The same install
@@ -80,6 +85,9 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 |---|---|
 | `project create <name> [--constitution-file <path>] [--force]` | Create a project and capture its constitution; `--force` re-captures an existing same-named project's constitution |
 | `project list` | List all projects on this machine |
+| `db status` | Show the active SQLite/Postgres backend |
+| `db use sqlite` | Switch to the local SQLite backend |
+| `db use postgres --url <connection-string>` | Validate and switch to PostgreSQL |
 | `instructions` / `--instructions` | Print agent-facing instructions |
 | `doc list --project <p> [--type] [--status]` | List documents in a project |
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
@@ -127,7 +135,7 @@ that work should always trace back to a feature or spec.
 
 ## Stack
 
-- **CLI / storage** — Node ≥ 22 + built-in `node:sqlite` (no native bindings).
+- **CLI / storage** — Node ≥ 22 + built-in `node:sqlite` or the pure-JavaScript `pg` client.
 - **Web UI** — React + Vite, built and bundled into the package; served by the same Express process
   as the API.
 - **Distribution** — npm. `npx syntagraphia` works with zero install step.

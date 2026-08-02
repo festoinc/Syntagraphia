@@ -14,7 +14,7 @@ let server;
 let baseUrl;
 
 test.before(async () => {
-  app = createApp();
+  app = await createApp();
   await new Promise((resolve) => {
     server = app.listen(0, '127.0.0.1', () => {
       baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -24,7 +24,7 @@ test.before(async () => {
 });
 
 test.after(async () => {
-  app.locals.db.close();
+  await app.locals.db.close();
   await new Promise((resolve) => server.close(resolve));
 });
 
