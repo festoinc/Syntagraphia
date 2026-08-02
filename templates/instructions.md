@@ -47,6 +47,10 @@ syntagraphia doc write  <id|slug> --project <p> --file <path>|--stdin [--json]
 syntagraphia doc edit   <id|slug> --project <p>
     Deprecated. Use `doc update` for CLI/agents or the web UI for human editing.
 
+syntagraphia search [<term>] --project <p> [--type <...>] [--status <...>] [--json]
+    Search document slugs, suffixes, and Markdown content. Filters are optional; matching is
+    case-insensitive and scoped to the selected project.
+
 syntagraphia relate <source-id> <target-id> <has_spec|has_task|verifies|implements> --project <p> [--json]
     Both documents must belong to the same project; cross-project relations are rejected.
 

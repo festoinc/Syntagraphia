@@ -54,6 +54,7 @@ syntagraphia relate 1 4 verifies --project my-app      # feature → verificatio
 
 # 4. View / edit
 syntagraphia doc list --project my-app
+syntagraphia search "authentication" --project my-app --status IN_PROGRESS
 syntagraphia doc show user-auth --project my-app
 syntagraphia doc update user-auth ./notes.md --project my-app
 syntagraphia doc checklist add user-auth "Login flow is documented" --project my-app
@@ -90,6 +91,7 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `db use postgres --url <connection-string>` | Validate and switch to PostgreSQL |
 | `instructions` / `--instructions` | Print agent-facing instructions |
 | `doc list --project <p> [--type] [--status]` | List documents in a project |
+| `search [<term>] --project <p> [--type] [--status]` | Search document slugs, suffixes, and content |
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
 | `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
 | `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
@@ -132,6 +134,10 @@ keep their own order. Existing Markdown checkbox lists are not imported automati
 
 `syntagraphia status` reports orphan tasks/verifications (those with no parent), enforcing the rule
 that work should always trace back to a feature or spec.
+
+`syntagraphia search` performs a case-insensitive search within the selected project's document
+slugs, optional task/spec suffixes, and Markdown content. The term and type/status filters are
+optional, so it can also list documents matching a type or status.
 
 ## Stack
 

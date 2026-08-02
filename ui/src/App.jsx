@@ -4,6 +4,7 @@ import {
   fetchProjects,
   createProject,
   fetchDocuments,
+  searchDocuments,
   fetchDocument,
   updateContent,
   updateStatus,
@@ -41,6 +42,11 @@ export default function App() {
   const [showProjectCreate, setShowProjectCreate] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [creatingProject, setCreatingProject] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('');
+  const [searchStatus, setSearchStatus] = useState('');
+  const [searchIds, setSearchIds] = useState(null);
+  const [searching, setSearching] = useState(false);
 
   // ── Load project list ────────────────────────────────────────
   const loadProjects = useCallback(async () => {
@@ -80,6 +86,10 @@ export default function App() {
     setHighlightedIds(new Set());
     setShowCreate({});
     setCreateSlugs({});
+    setSearchQuery('');
+    setSearchType('');
+    setSearchStatus('');
+    setSearchIds(null);
   }, [selectedProjectId]);
 
   // ── Load documents for the selected project ─────────────────
@@ -291,15 +301,57 @@ export default function App() {
     }
   }, [newProjectName, loadProjects]);
 
+  // ── Search ──────────────────────────────────────────────────
+  const handleSearch = useCallback(async (event) => {
+    event?.preventDefault();
+    const query = searchQuery.trim();
+    if (!query && !searchType && !searchStatus) {
+      setSearchIds(null);
+      return;
+    }
+    setSearching(true);
+    try {
+      const data = await searchDocuments(selectedProjectId, {
+        query,
+        type: searchType,
+        status: searchStatus,
+      });
+      const ids = new Set(data.documents.map(doc => doc.id));
+      setSearchIds(ids);
+      setExpandedId(null);
+      setExpandedContent('');
+      setExpandedChecklist([]);
+      setExpandedChecklistLabel(null);
+      setHighlightedIds(new Set());
+      setError(null);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSearching(false);
+    }
+  }, [searchQuery, searchType, searchStatus, selectedProjectId]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSearchType('');
+    setSearchStatus('');
+    setSearchIds(null);
+  }, []);
+
   // ── Grouped documents ────────────────────────────────────────
+  const visibleDocuments = useMemo(
+    () => searchIds == null ? documents : documents.filter(d => searchIds.has(d.id)),
+    [documents, searchIds]
+  );
+
   const byType = useMemo(() => {
     const g = {};
-    for (const d of documents) {
+    for (const d of visibleDocuments) {
       if (!g[d.type]) g[d.type] = [];
       g[d.type].push(d);
     }
     return g;
-  }, [documents]);
+  }, [visibleDocuments]);
 
   const tasksWithParent = useMemo(
     () => (byType.task || []).filter(t => hasParent(t.id)),
@@ -335,6 +387,33 @@ export default function App() {
               <option key={p.id} value={p.id}>{p.name} ({p.slug})</option>
             ))}
           </select>
+          <form className="search-form" onSubmit={handleSearch}>
+            <input
+              type="search"
+              aria-label="Search documents"
+              placeholder="Search documents…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <select aria-label="Filter by document type" value={searchType} onChange={(e) => setSearchType(e.target.value)}>
+              <option value="">All types</option>
+              <option value="feature">Features</option>
+              <option value="tech_spec">Specs</option>
+              <option value="task">Tasks</option>
+              <option value="verification">Verifications</option>
+            </select>
+            <select aria-label="Filter by document status" value={searchStatus} onChange={(e) => setSearchStatus(e.target.value)}>
+              <option value="">All statuses</option>
+              <option value="DRAFT">Draft</option>
+              <option value="IN_PROGRESS">In progress</option>
+              <option value="REVIEW">Review</option>
+              <option value="DONE">Done</option>
+            </select>
+            <button className="btn btn-primary btn-sm" type="submit" disabled={searching}>
+              {searching ? 'Searching…' : 'Search'}
+            </button>
+            {searchIds != null && <button className="btn btn-ghost btn-sm" type="button" onClick={clearSearch}>Clear</button>}
+          </form>
           <button className="btn btn-ghost" onClick={() => setShowProjectCreate(s => !s)}>+ Project</button>
           <button className="btn btn-ghost" onClick={loadData}>🔄 Refresh</button>
         </div>
@@ -372,8 +451,14 @@ export default function App() {
           </div>
         </div>
       ) : (
-        <div className="app-grid">
-          {PANELS.map(panel => (
+        <>
+          {searchIds != null && (
+            <div className="search-summary">
+              Showing {visibleDocuments.length} matching document{visibleDocuments.length === 1 ? '' : 's'}.
+            </div>
+          )}
+          <div className="app-grid">
+            {PANELS.map(panel => (
             <div key={panel.type} className={`panel panel-${panel.color}`} style={{ gridArea: panel.gridArea }}>
               <div className="panel-header">
                 <h2>
@@ -442,8 +527,9 @@ export default function App() {
                 )}
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
