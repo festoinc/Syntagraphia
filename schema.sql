@@ -31,6 +31,23 @@ CREATE TABLE IF NOT EXISTS relations (
     UNIQUE(source_id, target_id, relation_type)
 );
 
+-- Structured checklist items attached to feature/spec/task/verification documents.
+-- The item's label is derived from its parent document type, while status and
+-- optional commit URL are tracked independently from the document itself.
+CREATE TABLE IF NOT EXISTS checklist_items (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    position    INTEGER NOT NULL DEFAULT 0,
+    text        TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'DRAFT',  -- DRAFT | IN_PROGRESS | REVIEW | DONE
+    commit_url  TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_checklist_items_document
+    ON checklist_items(document_id, position, id);
+
 -- Helpful views (recreated idempotently). Both are id-based but now carry project_id.
 CREATE VIEW IF NOT EXISTS v_relation_map AS
 SELECT

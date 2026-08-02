@@ -11,3 +11,6 @@
 
 ## Risks
 <!-- Known risks and mitigations -->
+
+## Technical Checklist
+<!-- Manage structured technical checks in Syntagraphia's checklist panel. -->

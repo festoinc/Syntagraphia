@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StatusBadge from './StatusBadge';
+import ChecklistSection from './ChecklistSection';
 
 export default function DocumentCard({
   doc,
@@ -11,6 +12,11 @@ export default function DocumentCard({
   onToggle,
   onContentSave,
   onStatusChange,
+  checklist = [],
+  checklistLabel = null,
+  onChecklistAdd,
+  onChecklistUpdate,
+  onChecklistDelete,
   relatedTasks = [],
   relatedVerifications = [],
   onAddTask,
@@ -113,6 +119,15 @@ export default function DocumentCard({
               </button>
             </div>
           )}
+
+          <ChecklistSection
+            documentId={doc.id}
+            label={checklistLabel}
+            items={checklist}
+            onAdd={onChecklistAdd}
+            onUpdate={onChecklistUpdate}
+            onDelete={onChecklistDelete}
+          />
 
           {isParent && (
             <div className="related-section">
