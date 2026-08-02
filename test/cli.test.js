@@ -189,3 +189,18 @@ test('checklists validate input and remain project-scoped', () => {
   assert.equal(list.status, 0, list.stderr);
   assert.equal(JSON.parse(list.stdout).items[0].status, 'DRAFT');
 });
+
+test('database backend status and sqlite selection are persisted safely', () => {
+  const sandbox = createSandbox();
+  const initial = run(sandbox.home, 'db', 'status', '--json');
+  assert.equal(initial.status, 0, initial.stderr);
+  assert.equal(JSON.parse(initial.stdout).kind, 'sqlite');
+
+  const switched = run(sandbox.home, 'db', 'use', 'sqlite', '--json');
+  assert.equal(switched.status, 0, switched.stderr);
+  assert.deepEqual(JSON.parse(switched.stdout), { kind: 'sqlite', switched: true });
+
+  const configPath = path.join(sandbox.home, '.syntagraphia', 'config.json');
+  assert.equal(fs.statSync(configPath).mode & 0o777, 0o600);
+  assert.deepEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')), { db: { kind: 'sqlite' } });
+});
