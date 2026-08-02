@@ -1,6 +1,6 @@
 {
   "name": "syntagraphia",
-  "version": "0.1.0",
+  "version": "2026.8.2-1",
   "description": "Structured, connected project docs (features, specs, tasks, verifications) in a local SQLite DB — for humans and AI agents.",
   "license": "MIT",
   "author": "Festo Inc.",
@@ -37,7 +37,6 @@
     "server": "node bin/syntagraphia.js ui --no-open",
     "client": "cd ui && npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "test": "node --test",
     "build:ui": "cd ui && npm install && npm run build",
     "prepack": "npm run build:ui",
     "prepublishOnly": "npm run build:ui"
