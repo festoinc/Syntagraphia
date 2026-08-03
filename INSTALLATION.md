@@ -13,6 +13,34 @@ npm install --global syntagraphia
 syntagraphia --version
 ```
 
+## Choose the database backend before starting work
+
+Choose either SQLite or PostgreSQL before creating projects and documents.
+The backend selection applies to the whole machine, and Syntagraphia does not
+automatically migrate data between SQLite and PostgreSQL. Switching later
+requires a deliberate data migration, so make this choice at installation
+time.
+
+SQLite is the default and requires no additional service:
+
+```bash
+syntagraphia db use sqlite
+```
+
+To use PostgreSQL, make sure the database is provisioned first, then validate
+and select its connection URL:
+
+```bash
+syntagraphia db use postgres \
+  --url postgres://user:password@host:5432/syntagraphia
+```
+
+Confirm the active backend before creating your first project:
+
+```bash
+syntagraphia db status
+```
+
 ## Clean reinstall
 
 To completely remove the npm-installed CLI and install it again:
