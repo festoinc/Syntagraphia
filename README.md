@@ -19,6 +19,9 @@ https://youtu.be/oc32Ddz28cE
 
 ## Install
 
+For the complete install, clean reinstall, and first-project walkthrough, see
+[INSTALLATION.md](INSTALLATION.md).
+
 ```bash
 # Use without installing (recommended for AI agents):
 npx syntagraphia <command>
