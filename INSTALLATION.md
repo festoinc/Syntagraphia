@@ -5,17 +5,12 @@ Syntagraphia requires **Node.js 22 or newer** and npm. It uses Node's built-in
 
 ## Install from npm
 
-To install the CLI globally:
+Install the CLI globally once. Humans and AI agents should use this same
+installed command when collaborating across repositories:
 
 ```bash
 npm install --global syntagraphia
 syntagraphia --version
-```
-
-For a one-time invocation without a global install:
-
-```bash
-npx syntagraphia --version
 ```
 
 ## Clean reinstall

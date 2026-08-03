@@ -23,11 +23,9 @@ For the complete install, clean reinstall, and first-project walkthrough, see
 [INSTALLATION.md](INSTALLATION.md).
 
 ```bash
-# Use without installing (recommended for AI agents):
-npx syntagraphia <command>
-
-# Or install globally (nicer for humans running the UI repeatedly):
-npm install -g syntagraphia
+# Install once; humans and AI agents use the same command:
+npm install --global syntagraphia
+syntagraphia --version
 ```
 
 Requires **Node ≥ 22** (uses the built-in `node:sqlite`; PostgreSQL uses the pure-JavaScript `pg` client).
@@ -78,7 +76,7 @@ tracks all of them.
 
 Add one line to your project's `AGENTS.md` / `CLAUDE.md` so agents know the workflow:
 
-> Run `npx syntagraphia instructions` for the full doc-tracking workflow.
+> Run `syntagraphia instructions` for the full doc-tracking workflow.
 
 ## Commands
 
@@ -147,7 +145,7 @@ optional, so it can also list documents matching a type or status.
 - **CLI / storage** — Node ≥ 22 + built-in `node:sqlite` or the pure-JavaScript `pg` client.
 - **Web UI** — React + Vite, built and bundled into the package; served by the same Express process
   as the API.
-- **Distribution** — npm. `npx syntagraphia` works with zero install step.
+- **Distribution** — npm. Install once globally with `npm install --global syntagraphia`; the same command works across all repos for both humans and AI agents.
 
 ## Contributing (working on Syntagraphia itself)
 

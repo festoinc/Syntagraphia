@@ -8,10 +8,11 @@ no `.md` files on disk and no `features/`/`tasks/` directories.
 A **project** is the scoping unit. Doc-level commands take a required `--project <id|slug>` so
 Syntagraphia knows which project you mean. Create projects with `syntagraphia project create <name>`.
 
-Run `npx syntagraphia --instructions` to print this file. Target projects need only one line in
+Install the CLI once with `npm install --global syntagraphia`, then run
+`syntagraphia --instructions` to print this file. Target projects need only one line in
 their own `AGENTS.md`/`CLAUDE.md`:
 
-> Run `npx syntagraphia --instructions` for the full doc-tracking workflow.
+> Run `syntagraphia --instructions` for the full doc-tracking workflow.
 
 ---
 
