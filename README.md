@@ -42,7 +42,7 @@ syntagraphia project create "My App"
 #   → prints slug/id, e.g. my-app (id 1)
 
 # 2. Add and customize the agent instructions for this project
-cp "$(npm root --global)/syntagraphia/agents_template.md" AGENTS.md
+cp "$(npm root --global)/syntagraphia/AGENTS_template.md" AGENTS.md
 
 # 3. Create connected docs for a feature (all --project <slug>)
 syntagraphia doc create feature user-auth --project my-app
@@ -74,7 +74,7 @@ syntagraphia db use sqlite
 Switch repos? Just `project create` another one and pick it from the UI dropdown. The same install
 tracks all of them.
 
-Copy the packaged `agents_template.md` to your project's `AGENTS.md` or `CLAUDE.md`, then customize
+Copy the packaged `AGENTS_template.md` to your project's `AGENTS.md` or `CLAUDE.md`, then customize
 it for the project's conventions and workflow. The template is included in the npm package and is
 also available at the repository root.
 

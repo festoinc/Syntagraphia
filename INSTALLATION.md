@@ -63,11 +63,11 @@ Custom templates apply to newly created documents only and may use
 
 ## Set up agent instructions (recommended)
 
-Copy the packaged `agents_template.md` into the project as `AGENTS.md` or
+Copy the packaged `AGENTS_template.md` into the project as `AGENTS.md` or
 `CLAUDE.md`, then edit it to match the project's conventions and workflow:
 
 ```bash
-cp "$(npm root --global)/syntagraphia/agents_template.md" AGENTS.md
+cp "$(npm root --global)/syntagraphia/AGENTS_template.md" AGENTS.md
 ```
 
 The template is also available at the repository root when working from a

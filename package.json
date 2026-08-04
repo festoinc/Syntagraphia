@@ -26,7 +26,7 @@
     "lib",
     "schema.sql",
     "schema.postgres.sql",
-    "agents_template.md",
+    "AGENTS_template.md",
     "templates",
     "ui/dist"
   ],

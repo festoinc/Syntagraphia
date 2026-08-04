@@ -56,7 +56,7 @@ function createDocument(sandbox, project, typeOrSlug, slug) {
 }
 
 test('agent instructions are provided as an editable template, not a CLI command', () => {
-  const templatePath = path.join(ROOT, 'agents_template.md');
+  const templatePath = path.join(ROOT, 'AGENTS_template.md');
   assert.equal(fs.existsSync(templatePath), true);
   const template = fs.readFileSync(templatePath, 'utf8');
   assert.match(template, /Copy this file to a project's `AGENTS\.md` or `CLAUDE\.md`/);
