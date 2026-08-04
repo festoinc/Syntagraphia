@@ -1,9 +1,9 @@
 {
   "name": "syntagraphia",
-  "version": "2026.8.2-3",
+  "version": "2026.08.04-1",
   "description": "Structured, connected project docs (features, specs, tasks, verifications) in a local SQLite DB — for humans and AI agents.",
   "license": "MIT",
-  "author": "Festo Inc.",
+  "author": "Anatolii Fesiuk",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/festoinc/Syntagraphia.git"
