@@ -55,6 +55,80 @@ function createDocument(sandbox, project, typeOrSlug, slug) {
   return JSON.parse(result.stdout);
 }
 
+test('document templates can be listed, overridden, used, and reset', () => {
+  const sandbox = createSandbox();
+  const project = createProject(sandbox, 'Template Project');
+
+  const initial = run(sandbox.home, 'template', 'list', '--json');
+  assert.equal(initial.status, 0, initial.stderr);
+  assert.deepEqual(JSON.parse(initial.stdout).map(template => template.source), [
+    'default', 'default', 'default', 'default',
+  ]);
+
+  const customTemplates = [
+    ['feature', 'custom-feature', undefined],
+    ['tech_spec', 'custom-spec', undefined],
+    ['task', 'custom-task', 'backend'],
+    ['verification', 'custom-verification', undefined],
+  ];
+  for (const [type] of customTemplates) {
+    const file = sandbox.write(`${type}.md`, `# Custom ${type} — {{slug}}{{suffix_label}}\nTemplate suffix: {{suffix}}\n`);
+    const set = run(sandbox.home, 'template', 'set', type, file, '--json');
+    assert.equal(set.status, 0, set.stderr);
+    assert.equal(JSON.parse(set.stdout).source, 'custom');
+  }
+
+  const listed = run(sandbox.home, 'template', 'list', '--json');
+  assert.equal(listed.status, 0, listed.stderr);
+  assert.deepEqual(JSON.parse(listed.stdout).map(template => template.source), [
+    'custom', 'custom', 'custom', 'custom',
+  ]);
+
+  for (const [type, slug, suffix] of customTemplates) {
+    const args = ['doc', 'create', type, slug, '--project', project.slug, '--json'];
+    if (suffix) args.splice(4, 0, '--suffix', suffix);
+    const created = run(sandbox.home, ...args);
+    assert.equal(created.status, 0, created.stderr);
+    const document = JSON.parse(created.stdout);
+    assert.match(document.content, new RegExp(`# Custom ${type} — ${slug}${suffix ? ' \\(backend\\)' : ''}`));
+    assert.match(document.content, new RegExp(`Template suffix: ${suffix || ''}`));
+  }
+
+  const shown = run(sandbox.home, 'template', 'show', 'task', '--json');
+  assert.equal(shown.status, 0, shown.stderr);
+  assert.equal(JSON.parse(shown.stdout).source, 'custom');
+  assert.match(JSON.parse(shown.stdout).content, /\{\{suffix_label\}\}/);
+
+  const reset = run(sandbox.home, 'template', 'reset', 'feature', '--json');
+  assert.equal(reset.status, 0, reset.stderr);
+  assert.deepEqual(JSON.parse(reset.stdout), { type: 'feature', source: 'default', removed: true });
+
+  const afterReset = run(sandbox.home, 'doc', 'create', 'feature', 'default-feature', '--project', project.slug, '--json');
+  assert.equal(afterReset.status, 0, afterReset.stderr);
+  assert.match(JSON.parse(afterReset.stdout).content, /^# Feature — default-feature/);
+  assert.doesNotMatch(JSON.parse(afterReset.stdout).content, /Custom feature/);
+});
+
+test('template commands validate types and Markdown input files', () => {
+  const sandbox = createSandbox();
+  const invalidType = run(sandbox.home, 'template', 'show', 'constitution');
+  assert.equal(invalidType.status, 1);
+  assert.match(invalidType.stderr, /Invalid template type/);
+
+  const invalidExtension = sandbox.write('template.txt', '# Invalid\n');
+  const extensionResult = run(sandbox.home, 'template', 'set', 'feature', invalidExtension);
+  assert.equal(extensionResult.status, 1);
+  assert.match(extensionResult.stderr, /\.md extension/);
+
+  const missing = run(sandbox.home, 'template', 'set', 'feature', path.join(sandbox.home, 'missing.md'));
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /file not found/);
+
+  const invalidReset = run(sandbox.home, 'template', 'reset', 'constitution');
+  assert.equal(invalidReset.status, 1);
+  assert.match(invalidReset.stderr, /Invalid template type/);
+});
+
 test('checklists support type labels, ordering, statuses, and commit links', () => {
   const sandbox = createSandbox();
   const project = createProject(sandbox, 'Checklist Project');

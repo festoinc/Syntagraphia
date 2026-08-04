@@ -29,6 +29,16 @@ syntagraphia project create <name> [--constitution-file <path>] [--force]
 syntagraphia project list [--json]
     List all projects on this machine (id, slug, name, doc count).
 
+syntagraphia template list [--json]
+    List the four document templates and whether each uses the packaged default or a custom
+    machine-wide override.
+syntagraphia template show <feature|tech_spec|task|verification> [--json]
+    Show a template's Markdown content and source.
+syntagraphia template set <feature|tech_spec|task|verification> <file.md> [--json]
+    Set a custom Markdown template for newly created documents of that type.
+syntagraphia template reset <feature|tech_spec|task|verification> [--json]
+    Remove a custom override and restore the packaged default.
+
 syntagraphia --instructions | instructions
     Print this file.
 
@@ -174,6 +184,15 @@ User request
 ---
 
 ## Document templates (created automatically by `doc create`)
+
+`doc create` uses the packaged templates below unless a custom override has been set with
+`syntagraphia template set <type> <file.md>`. Overrides are stored machine-wide in
+`~/.syntagraphia/templates/` and affect newly created documents only. Existing document content
+is unchanged. Use `syntagraphia template reset <type>` to restore the packaged default.
+
+Templates support `{{slug}}`, `{{suffix}}`, and `{{suffix_label}}` placeholders. The suffix
+placeholders are useful for task and spec documents; `{{suffix_label}}` includes surrounding
+parentheses when a suffix is present.
 
 ### Feature
 ```markdown

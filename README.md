@@ -90,6 +90,10 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `db status` | Show the active SQLite/Postgres backend |
 | `db use sqlite` | Switch to the local SQLite backend |
 | `db use postgres --url <connection-string>` | Validate and switch to PostgreSQL |
+| `template list` | List document templates and whether each uses the packaged default or a custom override |
+| `template show <type>` | Show a document template's Markdown content |
+| `template set <type> <file.md>` | Set the template used for new documents of a type |
+| `template reset <type>` | Restore the packaged default template for a type |
 | `instructions` / `--instructions` | Print agent-facing instructions |
 | `doc list --project <p> [--type] [--status]` | List documents in a project |
 | `search [<term>] --project <p> [--type] [--status]` | Search document slugs, suffixes, and content |
@@ -109,6 +113,24 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `ui [--port 3001] [--no-open]` | Start the web UI (long-running, serves all projects) |
 
 Run `syntagraphia --help` for the full synopsis.
+
+## Document templates
+
+`doc create` uses the packaged templates in `templates/doc-content` by default. To customize the
+template for new documents of a type, provide a Markdown file:
+
+```bash
+syntagraphia template set feature ./feature-template.md
+syntagraphia template list
+syntagraphia template show feature
+```
+
+Overrides are stored machine-wide in `~/.syntagraphia/templates/` and apply only to documents
+created after the override is set. Existing document content is not changed. Use
+`syntagraphia template reset <type>` to return to the packaged default.
+
+Templates support `{{slug}}` for the document slug, `{{suffix}}` for an optional task/spec suffix,
+and `{{suffix_label}}` for the suffix including its surrounding parentheses.
 
 ## How docs connect
 
