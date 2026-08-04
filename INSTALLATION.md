@@ -61,6 +61,18 @@ Custom templates apply to newly created documents only and may use
 `syntagraphia template show <type>` to inspect a template and
 `syntagraphia template reset <type>` to restore the packaged default.
 
+## Set up agent instructions (recommended)
+
+Copy the packaged `agents_template.md` into the project as `AGENTS.md` or
+`CLAUDE.md`, then edit it to match the project's conventions and workflow:
+
+```bash
+cp "$(npm root --global)/syntagraphia/agents_template.md" AGENTS.md
+```
+
+The template is also available at the repository root when working from a
+source checkout.
+
 ## Clean reinstall
 
 To completely remove the npm-installed CLI and install it again:

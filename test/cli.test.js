@@ -55,6 +55,26 @@ function createDocument(sandbox, project, typeOrSlug, slug) {
   return JSON.parse(result.stdout);
 }
 
+test('agent instructions are provided as an editable template, not a CLI command', () => {
+  const templatePath = path.join(ROOT, 'agents_template.md');
+  assert.equal(fs.existsSync(templatePath), true);
+  const template = fs.readFileSync(templatePath, 'utf8');
+  assert.match(template, /Copy this file to a project's `AGENTS\.md` or `CLAUDE\.md`/);
+  assert.doesNotMatch(template, /syntagraphia (?:--instructions|instructions)/);
+
+  const help = run(createSandbox().home, '--help');
+  assert.equal(help.status, 0, help.stderr);
+  assert.doesNotMatch(help.stdout, /syntagraphia (?:--instructions|instructions)/);
+
+  const removedCommand = run(createSandbox().home, 'instructions');
+  assert.equal(removedCommand.status, 1);
+  assert.match(removedCommand.stderr, /unknown command/);
+
+  const removedFlag = run(createSandbox().home, '--instructions');
+  assert.equal(removedFlag.status, 1);
+  assert.match(removedFlag.stderr, /unknown command/);
+});
+
 test('document templates can be listed, overridden, used, and reset', () => {
   const sandbox = createSandbox();
   const project = createProject(sandbox, 'Template Project');

@@ -41,8 +41,8 @@ Syntagraphia keeps **every project on your machine** in a single global DB at
 syntagraphia project create "My App"
 #   → prints slug/id, e.g. my-app (id 1)
 
-# 2. Print the agent-facing workflow + command reference
-syntagraphia instructions
+# 2. Add and customize the agent instructions for this project
+cp "$(npm root --global)/syntagraphia/agents_template.md" AGENTS.md
 
 # 3. Create connected docs for a feature (all --project <slug>)
 syntagraphia doc create feature user-auth --project my-app
@@ -74,9 +74,9 @@ syntagraphia db use sqlite
 Switch repos? Just `project create` another one and pick it from the UI dropdown. The same install
 tracks all of them.
 
-Add one line to your project's `AGENTS.md` / `CLAUDE.md` so agents know the workflow:
-
-> Run `syntagraphia instructions` for the full doc-tracking workflow.
+Copy the packaged `agents_template.md` to your project's `AGENTS.md` or `CLAUDE.md`, then customize
+it for the project's conventions and workflow. The template is included in the npm package and is
+also available at the repository root.
 
 ## Commands
 
@@ -94,7 +94,6 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `template show <type>` | Show a document template's Markdown content |
 | `template set <type> <file.md>` | Set the template used for new documents of a type |
 | `template reset <type>` | Restore the packaged default template for a type |
-| `instructions` / `--instructions` | Print agent-facing instructions |
 | `doc list --project <p> [--type] [--status]` | List documents in a project |
 | `search [<term>] --project <p> [--type] [--status]` | Search document slugs, suffixes, and content |
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |

@@ -1,18 +1,16 @@
-# Syntagraphia — Agent Instructions
+# Syntagraphia — Agent Instructions Template
 
-Syntagraphia keeps a machine's projects (each with features, tech specs, tasks, verifications)
-structured and connected in a **single global SQLite DB** at `~/.syntagraphia/project-tracker.db`.
-One install serves every repo on the PC. Every document's **content lives in the DB** — there are
-no `.md` files on disk and no `features/`/`tasks/` directories.
+Copy this file to a project's `AGENTS.md` or `CLAUDE.md`, then customize it
+for the project's conventions and workflow. Syntagraphia keeps a machine's
+projects (each with features, tech specs, tasks, verifications) structured and
+connected in a **single global SQLite DB** at `~/.syntagraphia/project-tracker.db`.
+One install serves every repo on the PC. Every document's **content lives in
+the DB** — there are no `.md` files on disk and no `features/`/`tasks/`
+directories.
 
-A **project** is the scoping unit. Doc-level commands take a required `--project <id|slug>` so
-Syntagraphia knows which project you mean. Create projects with `syntagraphia project create <name>`.
-
-Install the CLI once with `npm install --global syntagraphia`, then run
-`syntagraphia --instructions` to print this file. Target projects need only one line in
-their own `AGENTS.md`/`CLAUDE.md`:
-
-> Run `syntagraphia --instructions` for the full doc-tracking workflow.
+A **project** is the scoping unit. Doc-level commands take a required
+`--project <id|slug>` so Syntagraphia knows which project you mean. Create
+projects with `syntagraphia project create <name>`.
 
 ---
 
@@ -39,22 +37,19 @@ syntagraphia template set <feature|tech_spec|task|verification> <file.md> [--jso
 syntagraphia template reset <feature|tech_spec|task|verification> [--json]
     Remove a custom override and restore the packaged default.
 
-syntagraphia --instructions | instructions
-    Print this file.
-
 syntagraphia doc list   --project <p> [--json] [--type <...>] [--status <...>]
 syntagraphia doc show   <id|slug> --project <p> [--json]
 syntagraphia doc create <type> <slug> --project <p> [--suffix <s>] [--status <STATUS>] [--json]
 syntagraphia doc set-status <id> <DRAFT|IN_PROGRESS|REVIEW|DONE> --project <p> [--json]
 syntagraphia doc checklist list <id|slug> --project <p> [--json]
 syntagraphia doc checklist add <id|slug> <text> --project <p> [--status <STATUS>] [--commit <url>] [--json]
-syntagraphia doc checklist update <item-id> --project <p> [--text <text>] [--status <STATUS>] [--commit <url>|--no-commit] [--json]
+syntagraphia doc checklist update <item-id> --project <p> [--text] [--status] [--commit <url>|--no-commit] [--json]
 syntagraphia doc checklist remove <item-id> --project <p> [--json]
 syntagraphia doc update <id|slug> <file.md> --project <p> [--json]
     Read a Markdown file and overwrite the document content in the DB. The file is only an input;
     document content remains stored in the DB.
 syntagraphia doc write  <id|slug> --project <p> --file <path>|--stdin [--json]
-    Legacy content overwrite command; use `doc update` for Markdown files.
+    Legacy content overwrite command.
 syntagraphia doc edit   <id|slug> --project <p>
     Deprecated. Use `doc update` for CLI/agents or the web UI for human editing.
 
@@ -71,8 +66,8 @@ syntagraphia status --project <p> [--json]
     Dashboard: counts by type/status + orphan check (Rule 4), scoped to the project.
 
 syntagraphia ui [--port 3001] [--no-open]
-    Start the web UI (bundled SPA + API) against the global DB. Serves ALL projects — pick one
-    from the dropdown in the header. The only long-running command.
+    Start the web UI (bundled SPA + API) against the global DB. Serves ALL projects. The only
+    long-running command.
 ```
 
 `--project <id|slug>` is **required** on every doc-level command (no default/fallback). Project
@@ -90,9 +85,9 @@ not imported automatically.
 
 ## What goes where
 
-All documents share a **common slug** (e.g. `user-authentication`). A feature `user-authentication`,
-its spec, its tasks (`-backend`, `-frontend` suffixes), and its verification all use slug
-`user-authentication`.
+All documents for a topic share a **common slug** (e.g. `user-authentication`). A feature
+`user-authentication`, its spec, its tasks (`-backend`, `-frontend` suffixes), and its verification
+all use slug `user-authentication`.
 
 | Type | Purpose | How to create |
 |---|---|---|
