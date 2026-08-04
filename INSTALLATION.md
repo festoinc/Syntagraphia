@@ -41,6 +41,26 @@ Confirm the active backend before creating your first project:
 syntagraphia db status
 ```
 
+## Set up document templates (recommended)
+
+After selecting the database backend, configure your document templates before
+creating project documents. Syntagraphia includes useful defaults, but you can
+set machine-wide Markdown templates for features, tech specs, tasks, and
+verifications:
+
+```bash
+syntagraphia template list
+syntagraphia template set feature ./templates/feature.md
+syntagraphia template set tech_spec ./templates/tech_spec.md
+syntagraphia template set task ./templates/task.md
+syntagraphia template set verification ./templates/verification.md
+```
+
+Custom templates apply to newly created documents only and may use
+`{{slug}}`, `{{suffix}}`, and `{{suffix_label}}` placeholders. Use
+`syntagraphia template show <type>` to inspect a template and
+`syntagraphia template reset <type>` to restore the packaged default.
+
 ## Clean reinstall
 
 To completely remove the npm-installed CLI and install it again:
