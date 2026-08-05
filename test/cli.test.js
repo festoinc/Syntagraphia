@@ -59,7 +59,8 @@ test('agent instructions are provided as an editable template, not a CLI command
   const templatePath = path.join(ROOT, 'AGENTS_template.md');
   assert.equal(fs.existsSync(templatePath), true);
   const template = fs.readFileSync(templatePath, 'utf8');
-  assert.match(template, /Copy this file to a project's `AGENTS\.md` or `CLAUDE\.md`/);
+  assert.match(template, /^# Syntagraphia Agent Workflow/m);
+  assert.match(template, /Run every document command with `--project <project>`/);
   assert.doesNotMatch(template, /syntagraphia (?:--instructions|instructions)/);
 
   const help = run(createSandbox().home, '--help');
