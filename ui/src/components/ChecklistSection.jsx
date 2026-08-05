@@ -11,19 +11,19 @@ export default function ChecklistSection({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [text, setText] = useState('');
-  const [commitUrl, setCommitUrl] = useState('');
+  const [note, setNote] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
-  const [editCommitUrl, setEditCommitUrl] = useState('');
+  const [editNote, setEditNote] = useState('');
 
   if (!label) return null;
 
   const handleAdd = async () => {
     if (!text.trim()) return;
     try {
-      await onAdd(documentId, { text: text.trim(), commit_url: commitUrl.trim() || null });
+      await onAdd(documentId, { text: text.trim(), commit_url: note.trim() || null });
       setText('');
-      setCommitUrl('');
+      setNote('');
       setShowForm(false);
     } catch (e) {
       alert(e.message || 'Failed to add checklist item');
@@ -33,7 +33,7 @@ export default function ChecklistSection({
   const startEdit = (item) => {
     setEditingId(item.id);
     setEditText(item.text);
-    setEditCommitUrl(item.commit_url || '');
+    setEditNote(item.commit_url || '');
   };
 
   const saveEdit = async (item) => {
@@ -41,7 +41,7 @@ export default function ChecklistSection({
     try {
       await onUpdate(documentId, item.id, {
         text: editText.trim(),
-        commit_url: editCommitUrl.trim() || null,
+        commit_url: editNote.trim() || null,
       });
       setEditingId(null);
     } catch (e) {
@@ -86,10 +86,11 @@ export default function ChecklistSection({
             autoFocus
           />
           <input
-            type="url"
-            placeholder="Optional commit URL"
-            value={commitUrl}
-            onChange={(e) => setCommitUrl(e.target.value)}
+            type="text"
+            maxLength={255}
+            placeholder="Optional note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
           />
           <button className="btn btn-primary btn-sm" onClick={handleAdd} disabled={!text.trim()}>Add</button>
           <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>✕</button>
@@ -105,7 +106,7 @@ export default function ChecklistSection({
           {editingId === item.id ? (
             <div className="checklist-edit-form">
               <input type="text" value={editText} onChange={(e) => setEditText(e.target.value)} autoFocus />
-              <input type="url" placeholder="Optional commit URL" value={editCommitUrl} onChange={(e) => setEditCommitUrl(e.target.value)} />
+              <input type="text" maxLength={255} placeholder="Optional note" value={editNote} onChange={(e) => setEditNote(e.target.value)} />
               <button className="btn btn-primary btn-sm" onClick={() => saveEdit(item)} disabled={!editText.trim()}>Save</button>
               <button className="btn btn-ghost btn-sm" onClick={() => setEditingId(null)}>Cancel</button>
             </div>
@@ -114,7 +115,9 @@ export default function ChecklistSection({
               <div className="checklist-item-main">
                 <span className="checklist-item-text">{item.text}</span>
                 {item.commit_url && (
-                  <a className="checklist-commit" href={item.commit_url} target="_blank" rel="noreferrer" title={item.commit_url}>commit ↗</a>
+                  /^https?:\/\//i.test(item.commit_url)
+                    ? <a className="checklist-commit" href={item.commit_url} target="_blank" rel="noreferrer" title={item.commit_url}>commit ↗</a>
+                    : <span className="checklist-commit" title={item.commit_url}>{item.commit_url}</span>
                 )}
               </div>
               <div className="checklist-item-actions">

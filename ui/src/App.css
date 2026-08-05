@@ -856,11 +856,15 @@ button:disabled, select:disabled { cursor: not-allowed; }
 .checklist-item-actions { flex-shrink: 0; }
 
 .checklist-commit {
-  flex-shrink: 0;
+  min-width: 0;
+  max-width: min(45%, 320px);
+  overflow: hidden;
   color: var(--body);
   font-family: var(--font-mono);
   font-size: 11px;
+  text-overflow: ellipsis;
   text-decoration: none;
+  white-space: nowrap;
 }
 .checklist-commit:hover { color: var(--ink); text-decoration: underline; }
 

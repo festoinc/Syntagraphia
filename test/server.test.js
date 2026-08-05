@@ -55,7 +55,7 @@ test('checklist API supports CRUD and independent item status', async () => {
     body: JSON.stringify({
       text: 'API contract is documented',
       status: 'IN_PROGRESS',
-      commit_url: 'https://github.com/example/project/commit/abc123',
+      commit_url: 'Needs product review before release',
     }),
   });
   assert.equal(createResponse.status, 201);

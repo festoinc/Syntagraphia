@@ -236,7 +236,7 @@ test('checklists support type labels, ordering, statuses, and commit links', () 
   assert.deepEqual(JSON.parse(remove.stdout), { id: secondItem.id, removed: true });
 });
 
-test('checklists validate input and remain project-scoped', () => {
+test('checklists validate input length and remain project-scoped', () => {
   const sandbox = createSandbox();
   const project = createProject(sandbox, 'Checklist Scope');
   const otherProject = createProject(sandbox, 'Other Checklist Scope');
@@ -249,14 +249,22 @@ test('checklists validate input and remain project-scoped', () => {
   assert.equal(constitution.status, 1);
   assert.match(constitution.stderr, /does not support checklists/);
 
-  const invalidUrl = run(
+  const note = run(
     sandbox.home,
-    'doc', 'checklist', 'add', 'payments', 'Invalid commit link',
+    'doc', 'checklist', 'add', 'payments', 'Checklist note',
     '--project', project.slug,
-    '--commit', 'javascript:alert(1)',
+    '--commit', 'Needs product review before release',
   );
-  assert.equal(invalidUrl.status, 1);
-  assert.match(invalidUrl.stderr, /http\(s\) URL/);
+  assert.equal(note.status, 0, note.stderr);
+
+  const tooLongNote = run(
+    sandbox.home,
+    'doc', 'checklist', 'add', 'payments', 'Too long note',
+    '--project', project.slug,
+    '--commit', 'x'.repeat(256),
+  );
+  assert.equal(tooLongNote.status, 1);
+  assert.match(tooLongNote.stderr, /255 characters/);
 
   const added = run(
     sandbox.home,

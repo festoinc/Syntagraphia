@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS relations (
 
 -- Structured checklist items attached to feature/spec/task/verification documents.
 -- The item's label is derived from its parent document type, while status and
--- optional commit URL are tracked independently from the document itself.
+-- optional note or commit reference is tracked independently from the document itself.
 CREATE TABLE IF NOT EXISTS checklist_items (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,

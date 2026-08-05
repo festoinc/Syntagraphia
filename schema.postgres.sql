@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS checklist_items (
     position    INTEGER NOT NULL DEFAULT 0,
     text        TEXT NOT NULL,
     status      TEXT NOT NULL DEFAULT 'DRAFT',
-    commit_url  TEXT,
+    commit_url  TEXT, -- optional note or commit reference, max 255 characters
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
