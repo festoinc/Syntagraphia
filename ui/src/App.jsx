@@ -37,6 +37,13 @@ const ICONS = {
 };
 
 const LS_KEY = 'syntagraphia.selectedProjectId';
+const PROJECT_LABEL_MAX_LENGTH = 40;
+
+function truncateProjectLabel(label) {
+  return label.length > PROJECT_LABEL_MAX_LENGTH
+    ? `${label.slice(0, PROJECT_LABEL_MAX_LENGTH)}...`
+    : label;
+}
 
 export default function App() {
   const [projects, setProjects] = useState([]);
@@ -489,9 +496,14 @@ export default function App() {
             disabled={projects.length === 0}
           >
             {projects.length === 0 && <option value="">No projects yet</option>}
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.name} ({p.slug})</option>
-            ))}
+            {projects.map(p => {
+              const fullLabel = `${p.name} (${p.slug})`;
+              return (
+                <option key={p.id} value={p.id} title={fullLabel}>
+                  {truncateProjectLabel(fullLabel)}
+                </option>
+              );
+            })}
           </select>
           <form className="search-form" onSubmit={handleSearch}>
             <input

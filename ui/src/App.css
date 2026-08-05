@@ -197,6 +197,8 @@ button:disabled, select:disabled { cursor: not-allowed; }
 
 .project-select {
   min-width: 200px;
+  width: min(40ch, 100%);
+  max-width: 40ch;
   padding-right: 36px;
 }
 
