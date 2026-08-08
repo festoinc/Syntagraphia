@@ -107,3 +107,13 @@ export async function createRelation(projectId, { source_id, target_id, relation
   if (!res.ok) throw new Error('Failed to create relation');
   return res.json();
 }
+
+export async function deleteRelation(projectId, { source_id, target_id }) {
+  const res = await fetch(`${BASE}/projects/${projectId}/relations`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source_id, target_id }),
+  });
+  if (!res.ok) throw new Error('Failed to remove relation');
+  return res.json();
+}

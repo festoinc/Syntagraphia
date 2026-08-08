@@ -8,9 +8,3 @@
 
 ## Dependencies
 <!-- External services, libraries, cross-team dependencies -->
-
-## Risks
-<!-- Known risks and mitigations -->
-
-## Technical Checklist
-<!-- Manage structured technical checks in Syntagraphia's checklist panel. -->
