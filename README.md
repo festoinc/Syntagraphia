@@ -99,6 +99,7 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
 | `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
 | `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
+| `doc rename <id\|slug> <new-slug> --project <p>` | Rename one document; its relations and checklist remain attached |
 | `doc checklist list <id\|slug> --project <p>` | List a document's structured checklist |
 | `doc checklist add <id\|slug> <text> --project <p> [--status] [--commit]` | Add a checklist item |
 | `doc checklist update <item-id> --project <p> [--text] [--status] [--commit\|--no-commit]` | Update a checklist item |

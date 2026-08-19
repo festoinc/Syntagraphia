@@ -401,6 +401,39 @@ test('doc update replaces content by slug and ID and returns JSON metadata', () 
   assert.equal(JSON.parse(shown.stdout).content, '# Second version\n');
 });
 
+test('doc rename changes one slug while preserving relations and checklist items', () => {
+  const sandbox = createSandbox();
+  const project = createProject(sandbox, 'Rename Project');
+  const feature = createDocument(sandbox, project, 'feature', 'old-name');
+  const task = createDocument(sandbox, project, 'task', 'old-name');
+  const relation = run(sandbox.home, 'relate', String(feature.id), String(task.id), 'has_task', '--project', project.slug);
+  assert.equal(relation.status, 0, relation.stderr);
+  const checklist = run(sandbox.home, 'doc', 'checklist', 'add', String(feature.id), 'Keep this acceptance criterion', '--project', project.slug, '--json');
+  assert.equal(checklist.status, 0, checklist.stderr);
+
+  const renamed = run(sandbox.home, 'doc', 'rename', 'old-name', 'new-name', '--project', project.slug, '--json');
+  assert.equal(renamed.status, 0, renamed.stderr);
+  assert.deepEqual(JSON.parse(renamed.stdout), {
+    id: feature.id, old_slug: 'old-name', slug: 'new-name', type: 'feature', suffix: null,
+  });
+
+  const shown = run(sandbox.home, 'doc', 'show', 'new-name', '--project', project.slug, '--json');
+  assert.equal(shown.status, 0, shown.stderr);
+  assert.equal(JSON.parse(shown.stdout).checklist[0].text, 'Keep this acceptance criterion');
+  const taskShown = run(sandbox.home, 'doc', 'show', String(task.id), '--project', project.slug, '--json');
+  assert.equal(taskShown.status, 0, taskShown.stderr);
+  assert.deepEqual(JSON.parse(taskShown.stdout).incoming, [{ source_id: feature.id, relation_type: 'has_task' }]);
+
+  const collision = run(sandbox.home, 'doc', 'rename', String(task.id), 'new-name', '--project', project.slug);
+  assert.equal(collision.status, 0, collision.stderr); // Different document type may share a slug.
+  const duplicate = run(sandbox.home, 'doc', 'create', 'task', 'other', '--project', project.slug, '--json');
+  assert.equal(duplicate.status, 0, duplicate.stderr);
+  const duplicateDoc = JSON.parse(duplicate.stdout);
+  const conflictingRename = run(sandbox.home, 'doc', 'rename', String(duplicateDoc.id), 'new-name', '--project', project.slug);
+  assert.equal(conflictingRename.status, 1);
+  assert.match(conflictingRename.stderr, /already exists/);
+});
+
 test('doc update validates files and project scope without changing content', () => {
   const sandbox = createSandbox();
   const project = createProject(sandbox);
