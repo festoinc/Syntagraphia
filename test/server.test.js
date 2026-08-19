@@ -119,3 +119,27 @@ test('search API matches content and applies type/status filters', async () => {
   assert.equal(invalidSearch.status, 400);
   assert.match((await invalidSearch.json()).error, /Invalid status/);
 });
+
+test('constitution API reads and updates a project constitution', async () => {
+  const projectResponse = await request('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify({ name: 'API Constitution Project', constitution: '# Original\n' }),
+  });
+  const project = await projectResponse.json();
+
+  const initial = await request(`/api/projects/${project.id}/constitution`);
+  assert.equal(initial.status, 200);
+  assert.deepEqual(await initial.json(), { content: '# Original\n' });
+
+  const updated = await request(`/api/projects/${project.id}/constitution`, {
+    method: 'PUT',
+    body: JSON.stringify({ content: '# Updated\nA clearer direction.\n' }),
+  });
+  assert.equal(updated.status, 200);
+  assert.equal((await updated.json()).content, '# Updated\nA clearer direction.\n');
+
+  const invalid = await request(`/api/projects/${project.id}/constitution`, {
+    method: 'PUT', body: JSON.stringify({ content: null }),
+  });
+  assert.equal(invalid.status, 400);
+});

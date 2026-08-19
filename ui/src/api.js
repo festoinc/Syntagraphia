@@ -16,6 +16,22 @@ export async function createProject(name) {
   return res.json();
 }
 
+export async function fetchConstitution(projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/constitution`);
+  if (!res.ok) throw new Error('Failed to fetch constitution');
+  return res.json();
+}
+
+export async function updateConstitution(projectId, content) {
+  const res = await fetch(`${BASE}/projects/${projectId}/constitution`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to save constitution');
+  return res.json();
+}
+
 export async function fetchDocuments(projectId) {
   const res = await fetch(`${BASE}/projects/${projectId}/documents`);
   if (!res.ok) throw new Error('Failed to fetch documents');

@@ -918,6 +918,9 @@ button:disabled, select:disabled { cursor: not-allowed; }
   overflow: hidden;
 }
 
+.constitution-modal { max-width: 760px; }
+.constitution-editor { min-height: min(58dvh, 600px); }
+
 .modal-header {
   display: flex;
   align-items: flex-start;

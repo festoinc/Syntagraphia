@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import DocumentCard from './components/DocumentCard';
 import DocumentModal from './components/DocumentModal';
+import ConstitutionModal from './components/ConstitutionModal';
 import {
   fetchProjects,
   createProject,
+  fetchConstitution,
+  updateConstitution,
   fetchDocuments,
   searchDocuments,
   fetchDocument,
@@ -74,6 +77,9 @@ export default function App() {
   const [modalChecklist, setModalChecklist] = useState([]);
   const [modalChecklistLabel, setModalChecklistLabel] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [showConstitution, setShowConstitution] = useState(false);
+  const [constitutionContent, setConstitutionContent] = useState('');
+  const [constitutionLoading, setConstitutionLoading] = useState(false);
 
   // ── Load project list ────────────────────────────────────────
   const loadProjects = useCallback(async () => {
@@ -121,6 +127,8 @@ export default function App() {
     setModalContent('');
     setModalChecklist([]);
     setModalChecklistLabel(null);
+    setShowConstitution(false);
+    setConstitutionContent('');
   }, [selectedProjectId]);
 
   // ── Load documents for the selected project ─────────────────
@@ -395,6 +403,24 @@ export default function App() {
     setModalChecklistLabel(null);
   }, []);
 
+  const openConstitution = useCallback(async () => {
+    setShowConstitution(true);
+    setConstitutionLoading(true);
+    try {
+      const { content } = await fetchConstitution(selectedProjectId);
+      setConstitutionContent(content);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setConstitutionLoading(false);
+    }
+  }, [selectedProjectId]);
+
+  const saveConstitution = useCallback(async (content) => {
+    await updateConstitution(selectedProjectId, content);
+    setConstitutionContent(content);
+  }, [selectedProjectId]);
+
   // Modal-scoped content save (keeps modal buffer in sync).
   const handleModalSave = useCallback(async (id, content) => {
     await updateContent(selectedProjectId, id, content);
@@ -505,6 +531,7 @@ export default function App() {
               );
             })}
           </select>
+          <button className="btn btn-secondary" onClick={openConstitution} disabled={selectedProjectId == null}>Constitution</button>
           <form className="search-form" onSubmit={handleSearch}>
             <input
               type="search"
@@ -669,6 +696,14 @@ export default function App() {
           onAddVerification={handleAddVerification}
           onStatusChange={handleStatusChange}
           onClose={closeModal}
+        />
+      )}
+      {showConstitution && (
+        <ConstitutionModal
+          content={constitutionContent}
+          isLoading={constitutionLoading}
+          onSave={saveConstitution}
+          onClose={() => setShowConstitution(false)}
         />
       )}
     </div>

@@ -150,6 +150,25 @@ test('template commands validate types and Markdown input files', () => {
   assert.match(invalidReset.stderr, /Invalid template type/);
 });
 
+test('constitution can be shown and replaced from Markdown or JSON', () => {
+  const sandbox = createSandbox();
+  const project = createProject(sandbox, 'Constitution Commands');
+  const shown = run(sandbox.home, 'constitution', 'show', '--project', project.slug, '--json');
+  assert.equal(shown.status, 0, shown.stderr);
+  assert.equal(JSON.parse(shown.stdout).content, '# Constitution\n');
+
+  const markdown = sandbox.write('constitution.md', '# Updated Constitution\n');
+  const updated = run(sandbox.home, 'constitution', 'set', markdown, '--project', project.slug, '--json');
+  assert.equal(updated.status, 0, updated.stderr);
+  assert.equal(JSON.parse(updated.stdout).bytes, Buffer.byteLength('# Updated Constitution\n'));
+
+  const json = sandbox.write('constitution.json', JSON.stringify({ Vision: 'Make project context clear.' }));
+  const jsonUpdate = run(sandbox.home, 'constitution', 'set', json, '--project', project.slug);
+  assert.equal(jsonUpdate.status, 0, jsonUpdate.stderr);
+  const afterJson = run(sandbox.home, 'constitution', 'show', '--project', project.slug);
+  assert.match(afterJson.stdout, /## Vision\nMake project context clear\./);
+});
+
 test('checklists support type labels, ordering, statuses, and commit links', () => {
   const sandbox = createSandbox();
   const project = createProject(sandbox, 'Checklist Project');
