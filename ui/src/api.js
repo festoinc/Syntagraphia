@@ -38,11 +38,11 @@ export async function fetchDocuments(projectId) {
   return res.json();
 }
 
-export async function searchDocuments(projectId, { query = '', type = '', status = '' } = {}) {
+export async function searchDocuments(projectId, { query = '', type = '', statuses = [] } = {}) {
   const params = new URLSearchParams();
   if (query.trim()) params.set('q', query.trim());
   if (type) params.set('type', type);
-  if (status) params.set('status', status);
+  if (statuses.length) params.set('status', statuses.join(','));
   const res = await fetch(`${BASE}/projects/${projectId}/documents/search?${params}`);
   if (!res.ok) throw new Error((await res.json()).error || 'Failed to search documents');
   return res.json();

@@ -490,6 +490,9 @@ test('search finds document content and supports type, status, and project filte
   const task = run(sandbox.home, 'doc', 'create', 'task', 'deployment', '--suffix', 'backend', '--project', project.slug, '--status', 'DONE', '--json');
   assert.equal(task.status, 0, task.stderr);
   const taskDoc = JSON.parse(task.stdout);
+  const review = run(sandbox.home, 'doc', 'create', 'task', 'review', '--suffix', 'frontend', '--project', project.slug, '--status', 'REVIEW', '--json');
+  assert.equal(review.status, 0, review.stderr);
+  const reviewDoc = JSON.parse(review.stdout);
   const notes = sandbox.write('search-notes.md', 'Authentication uses a secure session cookie.');
   const write = run(sandbox.home, 'doc', 'write', String(feature.id), '--project', project.slug, '--file', notes);
   assert.equal(write.status, 0, write.stderr);
@@ -506,9 +509,17 @@ test('search finds document content and supports type, status, and project filte
   assert.equal(filtered.status, 0, filtered.stderr);
   assert.deepEqual(JSON.parse(filtered.stdout).map(doc => doc.id), [taskDoc.id]);
 
+  const multipleStatuses = run(sandbox.home, 'search', '--project', project.slug, '--status', 'DRAFT,REVIEW', '--json');
+  assert.equal(multipleStatuses.status, 0, multipleStatuses.stderr);
+  assert.deepEqual(JSON.parse(multipleStatuses.stdout).map(doc => doc.id), [feature.id, reviewDoc.id]);
+
   const invalid = run(sandbox.home, 'search', 'anything', '--project', project.slug, '--type', 'unknown');
   assert.equal(invalid.status, 1);
   assert.match(invalid.stderr, /Invalid type/);
+
+  const invalidStatus = run(sandbox.home, 'search', '--project', project.slug, '--status', 'DRAFT,INVALID');
+  assert.equal(invalidStatus.status, 1);
+  assert.match(invalidStatus.stderr, /Invalid status 'INVALID'/);
 
   const otherFeature = createDocument(sandbox, otherProject, 'feature', 'user-auth');
   const isolated = run(sandbox.home, 'search', 'user-auth', '--project', project.slug, '--json');

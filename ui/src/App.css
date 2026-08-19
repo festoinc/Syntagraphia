@@ -228,6 +228,35 @@ button:disabled, select:disabled { cursor: not-allowed; }
   border-color: var(--ink);
 }
 
+.status-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  min-height: 36px;
+  margin: 0;
+  padding: 0 var(--sp-sm);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-full);
+  background: var(--surface-soft);
+  color: var(--charcoal);
+  font-size: 13px;
+}
+
+.status-filter legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.status-filter label { display: inline-flex; align-items: center; gap: var(--sp-xxs); white-space: nowrap; }
+.status-filter input { width: 14px; height: 14px; accent-color: var(--primary); }
+
 /* ── Project create bar ───────────────────────────────────────── */
 
 .project-create-bar {

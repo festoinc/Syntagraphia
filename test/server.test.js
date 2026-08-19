@@ -107,6 +107,12 @@ test('search API matches content and applies type/status filters', async () => {
   });
   const task = await taskResponse.json();
 
+  const reviewResponse = await request(`/api/projects/${project.id}/documents`, {
+    method: 'POST',
+    body: JSON.stringify({ slug: 'review-task', type: 'task', suffix: 'frontend', status: 'REVIEW' }),
+  });
+  const reviewTask = await reviewResponse.json();
+
   const contentSearch = await request(`/api/projects/${project.id}/documents/search?q=AUTHENTICATION`);
   assert.equal(contentSearch.status, 200);
   assert.deepEqual((await contentSearch.json()).documents.map(doc => doc.id), [feature.id]);
@@ -115,7 +121,11 @@ test('search API matches content and applies type/status filters', async () => {
   assert.equal(filteredSearch.status, 200);
   assert.deepEqual((await filteredSearch.json()).documents.map(doc => doc.id), [task.id]);
 
-  const invalidSearch = await request(`/api/projects/${project.id}/documents/search?status=INVALID`);
+  const multiStatusSearch = await request(`/api/projects/${project.id}/documents/search?status=DRAFT,REVIEW`);
+  assert.equal(multiStatusSearch.status, 200);
+  assert.deepEqual((await multiStatusSearch.json()).documents.map(doc => doc.id), [feature.id, reviewTask.id]);
+
+  const invalidSearch = await request(`/api/projects/${project.id}/documents/search?status=DRAFT,INVALID`);
   assert.equal(invalidSearch.status, 400);
   assert.match((await invalidSearch.json()).error, /Invalid status/);
 });

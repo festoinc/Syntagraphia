@@ -41,6 +41,12 @@ const ICONS = {
 
 const LS_KEY = 'syntagraphia.selectedProjectId';
 const PROJECT_LABEL_MAX_LENGTH = 40;
+const SEARCH_STATUSES = [
+  ['DRAFT', 'Draft'],
+  ['IN_PROGRESS', 'In progress'],
+  ['REVIEW', 'Review'],
+  ['DONE', 'Done'],
+];
 
 function truncateProjectLabel(label) {
   return label.length > PROJECT_LABEL_MAX_LENGTH
@@ -67,7 +73,7 @@ export default function App() {
   const [creatingProject, setCreatingProject] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('');
-  const [searchStatus, setSearchStatus] = useState('');
+  const [searchStatuses, setSearchStatuses] = useState([]);
   const [searchIds, setSearchIds] = useState(null);
   const [searching, setSearching] = useState(false);
 
@@ -121,7 +127,7 @@ export default function App() {
     setCreateSlugs({});
     setSearchQuery('');
     setSearchType('');
-    setSearchStatus('');
+    setSearchStatuses([]);
     setSearchIds(null);
     setModalDocId(null);
     setModalContent('');
@@ -344,7 +350,7 @@ export default function App() {
   const handleSearch = useCallback(async (event) => {
     event?.preventDefault();
     const query = searchQuery.trim();
-    if (!query && !searchType && !searchStatus) {
+    if (!query && !searchType && !searchStatuses.length) {
       setSearchIds(null);
       return;
     }
@@ -353,7 +359,7 @@ export default function App() {
       const data = await searchDocuments(selectedProjectId, {
         query,
         type: searchType,
-        status: searchStatus,
+        statuses: searchStatuses,
       });
       const ids = new Set(data.documents.map(doc => doc.id));
       setSearchIds(ids);
@@ -368,12 +374,12 @@ export default function App() {
     } finally {
       setSearching(false);
     }
-  }, [searchQuery, searchType, searchStatus, selectedProjectId]);
+  }, [searchQuery, searchType, searchStatuses, selectedProjectId]);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
     setSearchType('');
-    setSearchStatus('');
+    setSearchStatuses([]);
     setSearchIds(null);
   }, []);
 
@@ -547,13 +553,21 @@ export default function App() {
               <option value="task">Tasks</option>
               <option value="verification">Verifications</option>
             </select>
-            <select aria-label="Filter by document status" value={searchStatus} onChange={(e) => setSearchStatus(e.target.value)}>
-              <option value="">All statuses</option>
-              <option value="DRAFT">Draft</option>
-              <option value="IN_PROGRESS">In progress</option>
-              <option value="REVIEW">Review</option>
-              <option value="DONE">Done</option>
-            </select>
+            <fieldset className="status-filter">
+              <legend>Statuses</legend>
+              {SEARCH_STATUSES.map(([value, label]) => (
+                <label key={value}>
+                  <input
+                    type="checkbox"
+                    checked={searchStatuses.includes(value)}
+                    onChange={(event) => setSearchStatuses((current) => event.target.checked
+                      ? [...current, value]
+                      : current.filter((status) => status !== value))}
+                  />
+                  {label}
+                </label>
+              ))}
+            </fieldset>
             <button className="btn btn-secondary btn-sm" type="submit" disabled={searching}>
               {searching ? 'Searching…' : 'Search'}
             </button>

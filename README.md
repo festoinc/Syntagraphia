@@ -95,7 +95,7 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `template set <type> <file.md>` | Set the template used for new documents of a type |
 | `template reset <type>` | Restore the packaged default template for a type |
 | `doc list --project <p> [--type] [--status]` | List documents in a project |
-| `search [<term>] --project <p> [--type] [--status]` | Search document slugs, suffixes, and content |
+| `search [<term>] --project <p> [--type] [--status DRAFT,REVIEW]` | Search document slugs, suffixes, and content; comma-separate statuses to match any selected status |
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
 | `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
 | `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
