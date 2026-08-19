@@ -109,7 +109,9 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `relate <src> <tgt> <type> --project <p>` | Link documents (`has_spec\|has_task\|verifies\|implements`); same project only |
 | `constitution show --project <p>` | Show the project's constitution |
 | `status --project <p>` | Dashboard summary + orphan check |
-| `ui [--port 3001] [--no-open]` | Start the web UI (long-running, serves all projects) |
+| `ui [--port 3001] [--no-open]` | Start the web UI in the foreground (serves all projects) |
+| `ui start [--port 3001] [--no-open]` | Start the web UI in the background and return its URL/PID |
+| `ui stop` | Stop the background web UI started with `ui start` |
 
 Run `syntagraphia --help` for the full synopsis.
 

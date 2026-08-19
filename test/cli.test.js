@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const net = require('node:net');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
@@ -53,6 +54,26 @@ function createDocument(sandbox, project, typeOrSlug, slug) {
   );
   assert.equal(result.status, 0, result.stderr);
   return JSON.parse(result.stdout);
+}
+
+async function availablePort() {
+  const server = net.createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+  await new Promise((resolve) => server.close(resolve));
+  return port;
+}
+
+async function waitForUrl(url, timeoutMs = 2000) {
+  const until = Date.now() + timeoutMs;
+  while (Date.now() < until) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return;
+    } catch { /* server is still starting */ }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`UI did not start at ${url}`);
 }
 
 test('agent instructions are provided as an editable template, not a CLI command', () => {
@@ -167,6 +188,31 @@ test('constitution can be shown and replaced from Markdown or JSON', () => {
   assert.equal(jsonUpdate.status, 0, jsonUpdate.stderr);
   const afterJson = run(sandbox.home, 'constitution', 'show', '--project', project.slug);
   assert.match(afterJson.stdout, /## Vision\nMake project context clear\./);
+});
+
+test('ui start runs in the background and ui stop terminates it', async () => {
+  const sandbox = createSandbox();
+  const port = await availablePort();
+  const started = run(sandbox.home, 'ui', 'start', '--port', String(port), '--no-open', '--json');
+  assert.equal(started.status, 0, started.stderr);
+  const server = JSON.parse(started.stdout);
+  assert.equal(server.port, port);
+  assert.equal(server.started, true);
+  await waitForUrl(server.url);
+
+  try {
+    const duplicate = run(sandbox.home, 'ui', 'start', '--port', String(port), '--no-open');
+    assert.equal(duplicate.status, 1);
+    assert.match(duplicate.stderr, /already running/);
+  } finally {
+    const stopped = run(sandbox.home, 'ui', 'stop', '--json');
+    assert.equal(stopped.status, 0, stopped.stderr);
+    assert.equal(JSON.parse(stopped.stdout).stopped, true);
+  }
+
+  const secondStop = run(sandbox.home, 'ui', 'stop', '--json');
+  assert.equal(secondStop.status, 0, secondStop.stderr);
+  assert.equal(JSON.parse(secondStop.stdout).reason, 'not running');
 });
 
 test('checklists support type labels, ordering, statuses, and commit links', () => {
