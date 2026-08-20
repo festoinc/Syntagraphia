@@ -51,6 +51,7 @@ export default function DocumentCard({
           <span className="doc-card-arrow" aria-hidden="true"><Chevron /></span>
           <span className="doc-card-info">
             <span className="doc-card-title">{label}</span>
+            <span className="doc-card-meta">id: {doc.id}</span>
             {parentLabel && <span className="doc-card-parent">{parentLabel}</span>}
           </span>
         </button>

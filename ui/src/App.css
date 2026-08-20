@@ -528,6 +528,17 @@ button:disabled, select:disabled { cursor: not-allowed; }
   white-space: nowrap;
 }
 
+.doc-card-meta {
+  display: block;
+  overflow: hidden;
+  margin-top: 1px;
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .doc-card-parent {
   display: block;
   overflow: hidden;
@@ -1009,6 +1020,13 @@ button:disabled, select:disabled { cursor: not-allowed; }
   font-weight: 600;
   line-height: 1.3;
   color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.modal-id {
+  color: var(--mute);
+  font-family: var(--font-mono);
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 

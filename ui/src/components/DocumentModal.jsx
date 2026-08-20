@@ -50,6 +50,7 @@ export default function DocumentModal({
           <div className="modal-title">
             <span className="modal-type">{TYPE_LABELS[doc.type] || doc.type}</span>
             <h2>{label}</h2>
+            <span className="modal-id">id: {doc.id}</span>
             {parentLabel && <span className="modal-parent">{parentLabel}</span>}
           </div>
           <div className="modal-header-actions">
