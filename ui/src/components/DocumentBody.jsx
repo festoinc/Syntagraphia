@@ -14,6 +14,7 @@ export default function DocumentBody({
   content,
   isLoading,
   onContentSave,
+  statuses = [],
   checklist = [],
   checklistLabel = null,
   onChecklistAdd,
@@ -148,7 +149,7 @@ export default function DocumentBody({
                 <span className="related-item-label">
                   {task.suffix ? `${task.slug} (${task.suffix})` : task.slug}
                 </span>
-                <StatusBadge status={task.status} small />
+                <StatusBadge status={task.status} statuses={statuses} small />
               </div>
             ))}
           </div>
@@ -167,7 +168,7 @@ export default function DocumentBody({
             {relatedVerifications.map(v => (
               <div key={v.id} className="related-item">
                 <span className="related-item-label">{v.slug}</span>
-                <StatusBadge status={v.status} small />
+                <StatusBadge status={v.status} statuses={statuses} small />
               </div>
             ))}
           </div>

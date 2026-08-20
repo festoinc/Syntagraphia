@@ -33,6 +33,7 @@
   --status-progress:  #000000;  /* ink */
   --status-review:    #c2410c;  /* burnt orange */
   --status-done:      #16a34a;  /* green (echoes terminal-green) */
+  --status-custom:    #6d6d6d;  /* neutral gray for user-defined statuses */
   --error:            #b91c1c;
 
   /* ── Radius ──────────────────────────────────────────────────── */
@@ -990,6 +991,35 @@ button:disabled, select:disabled { cursor: not-allowed; }
 
 .constitution-modal { max-width: 760px; }
 .constitution-editor { min-height: min(58dvh, 600px); }
+
+.statuses-modal { max-width: 560px; }
+.statuses-modal .modal-body { padding: var(--sp-md) var(--sp-lg) var(--sp-lg); }
+
+.statuses-add {
+  display: flex;
+  gap: var(--sp-sm);
+  margin-bottom: var(--sp-md);
+}
+.statuses-add input { flex: 1; min-width: 0; }
+
+.statuses-list { display: flex; flex-direction: column; gap: var(--sp-sm); }
+.statuses-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-sm);
+  background: var(--surface-soft);
+  border-radius: var(--r-sm);
+}
+.statuses-item input { flex: 1; min-width: 0; }
+.statuses-item-code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.statuses-item-label { flex: 1; color: var(--ink); overflow-wrap: anywhere; }
+.statuses-item-usage { flex-shrink: 0; color: var(--mute); font-size: 12px; }
 
 .modal-header {
   display: flex;

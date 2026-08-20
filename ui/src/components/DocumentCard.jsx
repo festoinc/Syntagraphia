@@ -23,6 +23,7 @@ export default function DocumentCard({
   onToggle,
   onContentSave,
   onStatusChange,
+  statuses = [],
   checklist = [],
   checklistLabel = null,
   onChecklistAdd,
@@ -67,7 +68,7 @@ export default function DocumentCard({
               <Expand />
             </button>
           )}
-          <StatusBadge status={doc.status} onChange={(s) => onStatusChange(doc.id, s)} />
+          <StatusBadge status={doc.status} statuses={statuses} onChange={(s) => onStatusChange(doc.id, s)} />
         </div>
       </div>
 
@@ -79,6 +80,7 @@ export default function DocumentCard({
             content={content}
             isLoading={isLoading}
             onContentSave={onContentSave}
+            statuses={statuses}
             checklist={checklist}
             checklistLabel={checklistLabel}
             onChecklistAdd={onChecklistAdd}

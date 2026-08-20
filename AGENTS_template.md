@@ -286,7 +286,7 @@ syntagraphia unrelate <source-id> <target-id> --project <project>
 
 ## 6. Document status lifecycle
 
-Use statuses in this order:
+Use statuses in this order (seeded defaults):
 
 ```
 DRAFT → IN_PROGRESS → REVIEW → DONE
@@ -299,6 +299,18 @@ DRAFT → IN_PROGRESS → REVIEW → DONE
 
 Never mark work `DONE` merely because code was written. Use `REVIEW` when
 implementation is ready but user confirmation is still pending.
+
+Statuses are a global, user-defined vocabulary. Inspect it with
+`syntagraphia status list`, and add/rename/remove with:
+
+```bash
+syntagraphia status add <CODE> --label "<Label>"
+syntagraphia status rename <OLD> <NEW> --label "<Label>"
+syntagraphia status remove <CODE>
+```
+
+Renaming a status updates every document and checklist item that uses it.
+Removal is refused while any document or checklist item still uses the status.
 
 ---
 

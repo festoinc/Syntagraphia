@@ -6,6 +6,40 @@ export async function fetchProjects() {
   return res.json();
 }
 
+export async function fetchStatuses() {
+  const res = await fetch(`${BASE}/statuses`);
+  if (!res.ok) throw new Error('Failed to fetch statuses');
+  return res.json();
+}
+
+export async function createStatus(code, label) {
+  const res = await fetch(`${BASE}/statuses`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, label }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to create status');
+  return res.json();
+}
+
+export async function renameStatus(oldCode, { code, label }) {
+  const res = await fetch(`${BASE}/statuses/${encodeURIComponent(oldCode)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, label }),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to rename status');
+  return res.json();
+}
+
+export async function deleteStatus(code) {
+  const res = await fetch(`${BASE}/statuses/${encodeURIComponent(code)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error((await res.json()).error || 'Failed to delete status');
+  return res.json();
+}
+
 export async function createProject(name) {
   const res = await fetch(`${BASE}/projects`, {
     method: 'POST',

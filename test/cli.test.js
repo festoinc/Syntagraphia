@@ -607,3 +607,78 @@ test('search finds document content and supports type, status, and project filte
   assert.deepEqual(JSON.parse(isolated.stdout).map(doc => doc.id), [feature.id]);
   assert.notEqual(otherFeature.id, feature.id);
 });
+
+test('custom statuses support add, rename, remove, and validation', () => {
+  const sandbox = createSandbox();
+  const project = createProject(sandbox, 'Status Project');
+
+  const defaults = run(sandbox.home, 'status', 'list', '--json');
+  assert.equal(defaults.status, 0, defaults.stderr);
+  assert.deepEqual(JSON.parse(defaults.stdout).map(s => s.code), ['DRAFT', 'IN_PROGRESS', 'REVIEW', 'DONE']);
+
+  const rejected = run(sandbox.home, 'doc', 'create', 'feature', 'login', '--project', project.slug, '--status', 'BLOCKED');
+  assert.equal(rejected.status, 1);
+  assert.match(rejected.stderr, /Invalid status 'BLOCKED'/);
+
+  const badSearch = run(sandbox.home, 'search', '--project', project.slug, '--status', 'BLOCKED');
+  assert.equal(badSearch.status, 1);
+  assert.match(badSearch.stderr, /Invalid status 'BLOCKED'/);
+
+  const added = run(sandbox.home, 'status', 'add', 'BLOCKED', '--label', 'Blocked', '--json');
+  assert.equal(added.status, 0, added.stderr);
+  const addedStatus = JSON.parse(added.stdout);
+  assert.equal(addedStatus.code, 'BLOCKED');
+  assert.equal(addedStatus.label, 'Blocked');
+
+  const duplicate = run(sandbox.home, 'status', 'add', 'BLOCKED');
+  assert.equal(duplicate.status, 1);
+  assert.match(duplicate.stderr, /already exists/);
+
+  const created = run(sandbox.home, 'doc', 'create', 'feature', 'login', '--project', project.slug, '--status', 'BLOCKED', '--json');
+  assert.equal(created.status, 0, created.stderr);
+  const doc = JSON.parse(created.stdout);
+  assert.equal(doc.status, 'BLOCKED');
+
+  const item = run(sandbox.home, 'doc', 'checklist', 'add', 'login', 'AC1', '--project', project.slug, '--status', 'BLOCKED', '--json');
+  assert.equal(item.status, 0, item.stderr);
+  assert.equal(JSON.parse(item.stdout).status, 'BLOCKED');
+
+  const inUse = run(sandbox.home, 'status', 'remove', 'BLOCKED');
+  assert.equal(inUse.status, 1);
+  assert.match(inUse.stderr, /still use it/);
+
+  const renamed = run(sandbox.home, 'status', 'rename', 'BLOCKED', 'WAITING', '--label', 'Waiting', '--json');
+  assert.equal(renamed.status, 0, renamed.stderr);
+  assert.equal(JSON.parse(renamed.stdout).code, 'WAITING');
+
+  const shown = run(sandbox.home, 'doc', 'show', 'login', '--project', project.slug, '--json');
+  assert.equal(shown.status, 0, shown.stderr);
+  const full = JSON.parse(shown.stdout);
+  assert.equal(full.status, 'WAITING');
+  assert.equal(full.checklist[0].status, 'WAITING');
+
+  const search = run(sandbox.home, 'search', '--project', project.slug, '--status', 'WAITING', '--json');
+  assert.equal(search.status, 0, search.stderr);
+  assert.deepEqual(JSON.parse(search.stdout).map(d => d.id), [doc.id]);
+
+  const reassign = run(sandbox.home, 'doc', 'set-status', String(doc.id), 'DRAFT', '--project', project.slug);
+  assert.equal(reassign.status, 0, reassign.stderr);
+  const stillInUse = run(sandbox.home, 'status', 'remove', 'WAITING');
+  assert.equal(stillInUse.status, 1);
+  assert.match(stillInUse.stderr, /1 checklist item\(s\) still use it/);
+
+  const reassignItem = run(
+    sandbox.home,
+    'doc', 'checklist', 'update', String(JSON.parse(item.stdout).id),
+    '--project', project.slug,
+    '--status', 'DRAFT',
+  );
+  assert.equal(reassignItem.status, 0, reassignItem.stderr);
+  const removed = run(sandbox.home, 'status', 'remove', 'WAITING', '--json');
+  assert.equal(removed.status, 0, removed.stderr);
+  assert.equal(JSON.parse(removed.stdout).removed, true);
+
+  const dashboard = run(sandbox.home, 'status', '--project', project.slug);
+  assert.equal(dashboard.status, 0, dashboard.stderr);
+  assert.match(dashboard.stdout, /DONE/);
+});

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import DocumentCard from './components/DocumentCard';
 import DocumentModal from './components/DocumentModal';
 import ConstitutionModal from './components/ConstitutionModal';
+import StatusesModal from './components/StatusesModal';
 import { getConnectedDocumentIds } from './relations';
 import {
   fetchProjects,
@@ -18,6 +19,10 @@ import {
   deleteChecklistItem,
   createDocument,
   createRelation,
+  fetchStatuses,
+  createStatus,
+  renameStatus,
+  deleteStatus,
 } from './api';
 import './App.css';
 
@@ -42,12 +47,6 @@ const ICONS = {
 
 const LS_KEY = 'syntagraphia.selectedProjectId';
 const PROJECT_LABEL_MAX_LENGTH = 40;
-const SEARCH_STATUSES = [
-  ['DRAFT', 'Draft'],
-  ['IN_PROGRESS', 'In progress'],
-  ['REVIEW', 'Review'],
-  ['DONE', 'Done'],
-];
 
 function truncateProjectLabel(label) {
   return label.length > PROJECT_LABEL_MAX_LENGTH
@@ -60,6 +59,7 @@ export default function App() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [relations, setRelations] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [expandedContent, setExpandedContent] = useState('');
   const [expandedChecklist, setExpandedChecklist] = useState([]);
@@ -87,6 +87,18 @@ export default function App() {
   const [showConstitution, setShowConstitution] = useState(false);
   const [constitutionContent, setConstitutionContent] = useState('');
   const [constitutionLoading, setConstitutionLoading] = useState(false);
+  const [showStatuses, setShowStatuses] = useState(false);
+
+  // ── Load global status vocabulary ────────────────────────────
+  const loadStatuses = useCallback(async () => {
+    try {
+      setStatuses(await fetchStatuses());
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  useEffect(() => { loadStatuses(); }, [loadStatuses]);
 
   // ── Load project list ────────────────────────────────────────
   const loadProjects = useCallback(async () => {
@@ -400,6 +412,22 @@ export default function App() {
     setConstitutionContent(content);
   }, [selectedProjectId]);
 
+  // ── Status management ────────────────────────────────────────
+  const handleStatusAdd = useCallback(async (code, label) => {
+    await createStatus(code, label);
+    await loadStatuses();
+  }, [loadStatuses]);
+
+  const handleStatusRename = useCallback(async (oldCode, code, label) => {
+    await renameStatus(oldCode, { code, label });
+    await loadStatuses();
+  }, [loadStatuses]);
+
+  const handleStatusRemove = useCallback(async (code) => {
+    await deleteStatus(code);
+    await loadStatuses();
+  }, [loadStatuses]);
+
   // Modal-scoped content save (keeps modal buffer in sync).
   const handleModalSave = useCallback(async (id, content) => {
     await updateContent(selectedProjectId, id, content);
@@ -511,6 +539,7 @@ export default function App() {
             })}
           </select>
           <button className="btn btn-secondary" onClick={openConstitution} disabled={selectedProjectId == null}>Constitution</button>
+          <button className="btn btn-secondary" onClick={() => setShowStatuses(true)}>Statuses</button>
           <form className="search-form" onSubmit={handleSearch}>
             <input
               type="search"
@@ -532,16 +561,16 @@ export default function App() {
               </summary>
               <fieldset className="status-filter-menu">
                 <legend>Filter by status</legend>
-                {SEARCH_STATUSES.map(([value, label]) => (
-                  <label key={value}>
+                {statuses.map((s) => (
+                  <label key={s.code}>
                     <input
                       type="checkbox"
-                      checked={searchStatuses.includes(value)}
+                      checked={searchStatuses.includes(s.code)}
                       onChange={(event) => setSearchStatuses((current) => event.target.checked
-                        ? [...current, value]
-                        : current.filter((status) => status !== value))}
+                        ? [...current, s.code]
+                        : current.filter((status) => status !== s.code))}
                     />
-                    {label}
+                    {s.label}
                   </label>
                 ))}
               </fieldset>
@@ -641,6 +670,7 @@ export default function App() {
                     onToggle={handleToggle}
                     onContentSave={handleSave}
                     onStatusChange={handleStatusChange}
+                    statuses={statuses}
                     checklist={expandedId === doc.id ? expandedChecklist : []}
                     checklistLabel={expandedId === doc.id ? expandedChecklistLabel : null}
                     onChecklistAdd={handleChecklistAdd}
@@ -677,6 +707,7 @@ export default function App() {
           content={modalContent}
           isLoading={modalLoading}
           onContentSave={handleModalSave}
+          statuses={statuses}
           checklist={modalChecklist}
           checklistLabel={modalChecklistLabel}
           onChecklistAdd={handleModalChecklistAdd}
@@ -696,6 +727,15 @@ export default function App() {
           isLoading={constitutionLoading}
           onSave={saveConstitution}
           onClose={() => setShowConstitution(false)}
+        />
+      )}
+      {showStatuses && (
+        <StatusesModal
+          statuses={statuses}
+          onAdd={handleStatusAdd}
+          onRename={handleStatusRename}
+          onRemove={handleStatusRemove}
+          onClose={() => setShowStatuses(false)}
         />
       )}
     </div>

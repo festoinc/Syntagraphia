@@ -61,6 +61,36 @@ Custom templates apply to newly created documents only and may use
 `syntagraphia template show <type>` to inspect a template and
 `syntagraphia template reset <type>` to restore the packaged default.
 
+## Customize document statuses (recommended)
+
+Syntagraphia ships with four default statuses — `DRAFT`, `IN_PROGRESS`,
+`REVIEW`, and `DONE` — and they are seeded automatically the first time the
+database is used. You are not stuck with them: statuses form a global
+vocabulary shared by all projects, and you can add, rename, or remove statuses
+at any time, including right after installation.
+
+Inspect the current statuses:
+
+```bash
+syntagraphia status list
+```
+
+Add or rename statuses to match your team's workflow:
+
+```bash
+syntagraphia status add BLOCKED --label "Blocked"
+syntagraphia status rename IN_PROGRESS WIP --label "In Progress"
+syntagraphia status remove BLOCKED
+```
+
+Renaming a status automatically updates every document and checklist item that
+uses it. Removing a status is refused while any document or checklist item
+still uses it, so reassign those first:
+
+```bash
+syntagraphia doc set-status <id> DRAFT --project <project>
+```
+
 ## Set up agent instructions (obligatory)
 
 Copy the packaged `AGENTS_template.md` into the project as `AGENTS.md` or

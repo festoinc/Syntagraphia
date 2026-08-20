@@ -153,3 +153,59 @@ test('constitution API reads and updates a project constitution', async () => {
   });
   assert.equal(invalid.status, 400);
 });
+
+test('statuses API supports CRUD and blocks deletion while in use', async () => {
+  const projectResponse = await request('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify({ name: 'API Status Project', constitution: '# Constitution\n' }),
+  });
+  assert.equal(projectResponse.status, 200);
+  const project = await projectResponse.json();
+
+  const listResponse = await request('/api/statuses');
+  assert.equal(listResponse.status, 200);
+  const statuses = await listResponse.json();
+  assert.deepEqual(statuses.map(s => s.code), ['DRAFT', 'IN_PROGRESS', 'REVIEW', 'DONE']);
+
+  const createResponse = await request('/api/statuses', {
+    method: 'POST',
+    body: JSON.stringify({ code: 'BLOCKED', label: 'Blocked' }),
+  });
+  assert.equal(createResponse.status, 201);
+  assert.equal((await createResponse.json()).code, 'BLOCKED');
+
+  const duplicateResponse = await request('/api/statuses', {
+    method: 'POST',
+    body: JSON.stringify({ code: 'BLOCKED' }),
+  });
+  assert.equal(duplicateResponse.status, 409);
+
+  const documentResponse = await request(`/api/projects/${project.id}/documents`, {
+    method: 'POST',
+    body: JSON.stringify({ slug: 'status-feature', type: 'feature', status: 'BLOCKED' }),
+  });
+  assert.equal(documentResponse.status, 200);
+  assert.equal((await documentResponse.json()).status, 'BLOCKED');
+
+  const renameResponse = await request('/api/statuses/BLOCKED', {
+    method: 'PUT',
+    body: JSON.stringify({ code: 'WAITING', label: 'Waiting' }),
+  });
+  assert.equal(renameResponse.status, 200);
+  assert.equal((await renameResponse.json()).code, 'WAITING');
+
+  const documentsResponse = await request(`/api/projects/${project.id}/documents`);
+  const data = await documentsResponse.json();
+  assert.equal(data.documents.find(d => d.slug === 'status-feature').status, 'WAITING');
+
+  const deleteBlocked = await request('/api/statuses/WAITING', { method: 'DELETE' });
+  assert.equal(deleteBlocked.status, 409);
+
+  const unusedCreate = await request('/api/statuses', {
+    method: 'POST',
+    body: JSON.stringify({ code: 'UNUSED' }),
+  });
+  assert.equal(unusedCreate.status, 201);
+  const deleteResponse = await request('/api/statuses/UNUSED', { method: 'DELETE' });
+  assert.equal(deleteResponse.status, 200);
+});

@@ -7,6 +7,16 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Document status vocabulary (global, shared across projects).
+-- Seeded with DRAFT | IN_PROGRESS | REVIEW | DONE by lib/statuses.js.
+CREATE TABLE IF NOT EXISTS statuses (
+    id         SERIAL PRIMARY KEY,
+    code       TEXT NOT NULL UNIQUE,
+    label      TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS documents (
     id         SERIAL PRIMARY KEY,
     project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,

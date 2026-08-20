@@ -10,6 +10,16 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Document status vocabulary (global, shared across projects).
+-- Seeded with DRAFT | IN_PROGRESS | REVIEW | DONE by lib/statuses.js.
+CREATE TABLE IF NOT EXISTS statuses (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    code       TEXT NOT NULL UNIQUE,
+    label      TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS documents (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,

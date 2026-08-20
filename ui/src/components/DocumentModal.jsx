@@ -15,6 +15,7 @@ export default function DocumentModal({
   content,
   isLoading,
   onContentSave,
+  statuses = [],
   checklist = [],
   checklistLabel = null,
   onChecklistAdd,
@@ -54,7 +55,7 @@ export default function DocumentModal({
             {parentLabel && <span className="modal-parent">{parentLabel}</span>}
           </div>
           <div className="modal-header-actions">
-            <StatusBadge status={doc.status} onChange={(s) => onStatusChange(doc.id, s)} />
+            <StatusBadge status={doc.status} statuses={statuses} onChange={(s) => onStatusChange(doc.id, s)} />
             <button
               type="button"
               className="btn btn-ghost btn-sm modal-close"
@@ -73,6 +74,7 @@ export default function DocumentModal({
             content={content}
             isLoading={isLoading}
             onContentSave={onContentSave}
+            statuses={statuses}
             checklist={checklist}
             checklistLabel={checklistLabel}
             onChecklistAdd={onChecklistAdd}

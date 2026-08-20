@@ -98,7 +98,7 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `search [<term>] --project <p> [--type] [--status DRAFT,REVIEW]` | Search document slugs, suffixes, and content; comma-separate statuses to match any selected status |
 | `doc show <id\|slug> --project <p>` | Show a document (content + relations) |
 | `doc create <type> <slug> --project <p> [--suffix] [--status]` | Create a document from a template |
-| `doc set-status <id> <STATUS> --project <p>` | Change status (`DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
+| `doc set-status <id> <STATUS> --project <p>` | Change a document's status (defaults: `DRAFT\|IN_PROGRESS\|REVIEW\|DONE`) |
 | `doc rename <id\|slug> <new-slug> --project <p>` | Rename one document; its relations and checklist remain attached |
 | `doc delete <id\|slug> --project <p>` | Delete a document, including its checklist items and relations |
 | `doc checklist list <id\|slug> --project <p>` | List a document's structured checklist |
@@ -111,6 +111,10 @@ All one-shot commands support `--json` (machine-readable). Doc-level commands re
 | `relate <src> <tgt> <type> --project <p>` | Link documents (`has_spec\|has_task\|verifies\|implements`); same project only |
 | `constitution show --project <p>` | Show the project's constitution |
 | `status --project <p>` | Dashboard summary + orphan check |
+| `status list` | List the global status vocabulary with usage counts |
+| `status add <CODE> [--label <Label>]` | Add a custom status |
+| `status rename <OLD> <NEW> [--label <Label>]` | Rename a status, updating documents/checklist items that use it |
+| `status remove <CODE>` | Remove a status (fails while documents or checklist items still use it) |
 | `ui [--port 3001] [--no-open]` | Start the web UI in the foreground (serves all projects) |
 | `ui start [--port 3001] [--no-open]` | Start the web UI in the background and return its URL/PID |
 | `ui stop` | Stop the background web UI started with `ui start` |
@@ -154,9 +158,10 @@ Markdown content:
 - tech specs use **Technical Checklist**;
 - verifications use **Validation Checklist**.
 
-Every item has its own status (`DRAFT`, `IN_PROGRESS`, `REVIEW`, or `DONE`) and may include an
-optional HTTP(S) link to the Git commit that completed it. Checklist items are project-scoped and
-keep their own order. Existing Markdown checkbox lists are not imported automatically.
+Every item has its own status (seeded as `DRAFT`, `IN_PROGRESS`, `REVIEW`, and `DONE`, customizable
+via `syntagraphia status add/rename/remove`) and may include an optional HTTP(S) link to the Git
+commit that completed it. Checklist items are project-scoped and keep their own order. Existing
+Markdown checkbox lists are not imported automatically.
 
 `syntagraphia status` reports orphan tasks/verifications (those with no parent), enforcing the rule
 that work should always trace back to a feature or spec.
