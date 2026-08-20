@@ -434,6 +434,53 @@ test('doc rename changes one slug while preserving relations and checklist items
   assert.match(conflictingRename.stderr, /already exists/);
 });
 
+test('doc delete removes a document and cascades its checklist items and relations', () => {
+  const sandbox = createSandbox();
+  const project = createProject(sandbox, 'Delete Project');
+  const otherProject = createProject(sandbox, 'Other Delete Project');
+  const feature = createDocument(sandbox, project, 'feature', 'delete-me');
+  const task = createDocument(sandbox, project, 'task', 'delete-me');
+  const checklist = run(
+    sandbox.home,
+    'doc', 'checklist', 'add', String(feature.id), 'This should be deleted',
+    '--project', project.slug,
+    '--json',
+  );
+  assert.equal(checklist.status, 0, checklist.stderr);
+  const relation = run(sandbox.home, 'relate', String(feature.id), String(task.id), 'has_task', '--project', project.slug);
+  assert.equal(relation.status, 0, relation.stderr);
+
+  const deleted = run(sandbox.home, 'doc', 'delete', 'delete-me', '--project', project.slug, '--json');
+  assert.equal(deleted.status, 0, deleted.stderr);
+  assert.deepEqual(JSON.parse(deleted.stdout), {
+    id: feature.id, slug: 'delete-me', type: 'feature', suffix: null, deleted: true,
+  });
+
+  const shown = run(sandbox.home, 'doc', 'show', String(feature.id), '--project', project.slug);
+  assert.equal(shown.status, 1);
+  assert.match(shown.stderr, /no document matching/);
+  const items = run(sandbox.home, 'doc', 'checklist', 'list', String(feature.id), '--project', project.slug);
+  assert.equal(items.status, 1);
+  assert.match(items.stderr, /no document matching/);
+  const taskShown = run(sandbox.home, 'doc', 'show', String(task.id), '--project', project.slug, '--json');
+  assert.equal(taskShown.status, 0, taskShown.stderr);
+  assert.deepEqual(JSON.parse(taskShown.stdout).incoming, []);
+  const status = run(sandbox.home, 'status', '--project', project.slug, '--json');
+  assert.equal(status.status, 0, status.stderr);
+  assert.equal(JSON.parse(status.stdout).relations, 0);
+
+  const wrongProject = run(sandbox.home, 'doc', 'delete', String(task.id), '--project', otherProject.slug);
+  assert.equal(wrongProject.status, 1);
+  assert.match(wrongProject.stderr, /not found in this project/);
+  const missing = run(sandbox.home, 'doc', 'delete', '--project', project.slug);
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /requires <id\|slug>/);
+
+  const deletedById = run(sandbox.home, 'doc', 'delete', String(task.id), '--project', project.slug);
+  assert.equal(deletedById.status, 0, deletedById.stderr);
+  assert.match(deletedById.stdout, new RegExp(`Deleted \\[${task.id}\\] task`));
+});
+
 test('doc update validates files and project scope without changing content', () => {
   const sandbox = createSandbox();
   const project = createProject(sandbox);
