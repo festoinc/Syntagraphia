@@ -109,12 +109,12 @@ button:disabled, select:disabled { cursor: not-allowed; }
 
 .app-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--sp-lg);
   flex-shrink: 0;
-  height: 64px;
-  padding: 0 var(--sp-xl);
+  min-height: 80px;
+  padding: var(--sp-sm) var(--sp-xl) var(--sp-md);
   background: var(--canvas);
   border-bottom: 1px solid var(--hairline);
 }
@@ -165,7 +165,7 @@ button:disabled, select:disabled { cursor: not-allowed; }
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--sp-sm);
   min-width: 0;
 }
@@ -192,13 +192,13 @@ button:disabled, select:disabled { cursor: not-allowed; }
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
-.search-form input { width: 200px; }
+.search-form input { width: clamp(150px, 12vw, 180px); }
 .search-form input::placeholder { color: var(--mute); }
 
 .project-select {
-  min-width: 200px;
-  width: min(40ch, 100%);
-  max-width: 40ch;
+  min-width: 168px;
+  width: clamp(168px, 19vw, 260px);
+  max-width: 260px;
   padding-right: 36px;
 }
 
@@ -229,20 +229,50 @@ button:disabled, select:disabled { cursor: not-allowed; }
 }
 
 .status-filter {
+  position: relative;
+  margin: 0;
+}
+
+.status-filter summary {
   display: flex;
   align-items: center;
-  gap: var(--sp-xs);
-  min-height: 36px;
-  margin: 0;
-  padding: 0 var(--sp-sm);
+  height: 36px;
+  padding: 0 32px 0 var(--sp-md);
   border: 1px solid var(--hairline);
   border-radius: var(--r-full);
   background: var(--surface-soft);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+  list-style: none;
+  white-space: nowrap;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23737373' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3 4.5l3 3 3-3'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.status-filter summary::-webkit-details-marker { display: none; }
+.status-filter[open] summary { background-color: var(--canvas); border-color: var(--ink); }
+
+.status-filter-menu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--sp-xs));
+  right: 0;
+  display: grid;
+  gap: var(--sp-xs);
+  min-width: 156px;
+  margin: 0;
+  padding: var(--sp-sm);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-md);
+  background: var(--canvas);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   color: var(--charcoal);
   font-size: 13px;
 }
 
-.status-filter legend {
+.status-filter-menu legend {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -254,8 +284,8 @@ button:disabled, select:disabled { cursor: not-allowed; }
   border: 0;
 }
 
-.status-filter label { display: inline-flex; align-items: center; gap: var(--sp-xxs); white-space: nowrap; }
-.status-filter input { width: 14px; height: 14px; accent-color: var(--primary); }
+.status-filter-menu label { display: inline-flex; align-items: center; gap: var(--sp-xs); min-height: 28px; white-space: nowrap; }
+.status-filter-menu input { width: 14px; height: 14px; accent-color: var(--primary); }
 
 /* ── Project create bar ───────────────────────────────────────── */
 

@@ -553,21 +553,26 @@ export default function App() {
               <option value="task">Tasks</option>
               <option value="verification">Verifications</option>
             </select>
-            <fieldset className="status-filter">
-              <legend>Statuses</legend>
-              {SEARCH_STATUSES.map(([value, label]) => (
-                <label key={value}>
-                  <input
-                    type="checkbox"
-                    checked={searchStatuses.includes(value)}
-                    onChange={(event) => setSearchStatuses((current) => event.target.checked
-                      ? [...current, value]
-                      : current.filter((status) => status !== value))}
-                  />
-                  {label}
-                </label>
-              ))}
-            </fieldset>
+            <details className="status-filter">
+              <summary>
+                Statuses{searchStatuses.length ? ` (${searchStatuses.length})` : ''}
+              </summary>
+              <fieldset className="status-filter-menu">
+                <legend>Filter by status</legend>
+                {SEARCH_STATUSES.map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      type="checkbox"
+                      checked={searchStatuses.includes(value)}
+                      onChange={(event) => setSearchStatuses((current) => event.target.checked
+                        ? [...current, value]
+                        : current.filter((status) => status !== value))}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            </details>
             <button className="btn btn-secondary btn-sm" type="submit" disabled={searching}>
               {searching ? 'Searching…' : 'Search'}
             </button>
