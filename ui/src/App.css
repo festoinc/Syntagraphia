@@ -471,13 +471,13 @@ button:disabled, select:disabled { cursor: not-allowed; }
 }
 
 .doc-card.highlighted {
-  border-color: var(--hairline-strong);
+  border: 2px solid var(--ink);
   background: var(--surface-soft);
 }
 
 .doc-card.expanded {
   border-color: var(--ink);
-  border-width: 1px;
+  border-width: 2px;
   box-shadow: 0 0 0 1px var(--ink);
 }
 

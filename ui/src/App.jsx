@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import DocumentCard from './components/DocumentCard';
 import DocumentModal from './components/DocumentModal';
 import ConstitutionModal from './components/ConstitutionModal';
+import { getConnectedDocumentIds } from './relations';
 import {
   fetchProjects,
   createProject,
@@ -176,26 +177,6 @@ export default function App() {
     return `${typeLabel}: ${name}`;
   }, [relations, documents]);
 
-  // ── Get all related IDs for a document ──────────────────────
-  const getRelatedIds = useCallback((docId) => {
-    const ids = new Set([docId]);
-    const highlightableRels = ['has_task', 'verifies'];
-    // If it's a feature/spec, add its tasks and verifications only
-    relations
-      .filter(r => r.source_id === docId && highlightableRels.includes(r.relation_type))
-      .forEach(r => ids.add(r.target_id));
-    // If it's a task/verification, find its parent(s) and their tasks/verifications
-    relations
-      .filter(r => r.target_id === docId && highlightableRels.includes(r.relation_type))
-      .forEach(r => {
-        ids.add(r.source_id);
-        relations
-          .filter(r2 => r2.source_id === r.source_id && highlightableRels.includes(r2.relation_type))
-          .forEach(r2 => ids.add(r2.target_id));
-      });
-    return ids;
-  }, [relations]);
-
   // ── Toggle expand ────────────────────────────────────────────
   const handleToggle = useCallback(async (id) => {
     if (expandedId === id) {
@@ -203,19 +184,11 @@ export default function App() {
       setExpandedContent('');
       setExpandedChecklist([]);
       setExpandedChecklistLabel(null);
-      // Remove this doc's related IDs from highlights
-      const related = getRelatedIds(id);
-      setHighlightedIds(prev => {
-        const next = new Set(prev);
-        related.forEach(rid => next.delete(rid));
-        return next;
-      });
+      setHighlightedIds(new Set());
     } else {
       setExpandedId(id);
       setContentLoading(true);
-      // Add this doc's related IDs to highlights (cumulative)
-      const related = getRelatedIds(id);
-      setHighlightedIds(prev => new Set([...prev, ...related]));
+      setHighlightedIds(getConnectedDocumentIds(relations, id));
       try {
         const doc = await fetchDocument(selectedProjectId, id);
         setExpandedContent(doc.content || '');
@@ -228,7 +201,7 @@ export default function App() {
         setContentLoading(false);
       }
     }
-  }, [expandedId, getRelatedIds, selectedProjectId]);
+  }, [expandedId, relations, selectedProjectId]);
 
   // ── Save content ─────────────────────────────────────────────
   const handleSave = useCallback(async (id, content) => {
